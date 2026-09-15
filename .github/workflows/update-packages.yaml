@@ -1,0 +1,29 @@
+%YAML 1.1
+---
+name: Update packages
+'on':
+  schedule:
+    - cron: 0 06 * * FRI
+  workflow_dispatch: {}
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  update-packages:
+    name: Update packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: DeterminateSystems/nix-installer-action@v22
+        with:
+          extra-conf: "allow-import-from-derivation = false\nextra-substituters = https://devenv.cachix.org https://nix-community.cachix.org\nextra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      - name: Update packages
+        run: nix run .#update-packages
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          body: Automated update of package dependencies via each package's `passthru.updateScript`.
+          branch: update-packages
+          commit-message: 'deps(packages): update package dependencies'
+          labels: automated,dependencies
+          title: 'deps(packages): update package dependencies'

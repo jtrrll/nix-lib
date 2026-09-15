@@ -1,0 +1,16 @@
+[package]
+name = "session"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "session"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+clap_complete = "4"
+
+[profile.release]
+opt-level = "s"
+lto = true
