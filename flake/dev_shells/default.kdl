@@ -1,0 +1,59 @@
+layout {
+  default_tab_template {
+    pane size=1 borderless=true {
+      plugin location="zellij:tab-bar"
+    }
+    pane split_direction="vertical" {
+      pane size=24 {
+        plugin location="agent-handler"
+      }
+      children
+    }
+  }
+  tab name="workspace" focus=true split_direction="vertical" {
+    pane size="50%" {
+      pane {
+        name "shell"
+        size "75%"
+        focus true
+        command "bash"
+        args "-c" "nix develop . --impure -c $SHELL"
+      }
+      pane {
+        name "nix repl"
+        size "25%"
+        command "nix"
+        args "repl"
+      }
+    }
+    pane {
+      name "assistant"
+      size "25%"
+      command "nix"
+      args "develop" "." "--impure" "-c" "opencode"
+    }
+    pane size="25%" {
+      pane {
+        name "git status"
+        size "40%"
+        command "watch"
+        args "--interval" "10" "--no-title" "--color" "git" "-c" "color.ui=always" "status" "--short"
+      }
+      pane {
+        name "nix flake check"
+        size "50%"
+        command "bash"
+        args "-c" "NIXPKGS_ALLOW_UNFREE=1 nix run github:Mic92/nix-fast-build -- --flake .#checks.aarch64-darwin --impure --skip-cached"
+        start_suspended true
+      }
+    }
+  }
+  tab name="agent" {
+    pane {
+      name "agent"
+      command "nix"
+      args "develop" "." "--impure" "-c" "opencode"
+      start_suspended true
+    }
+  }
+}

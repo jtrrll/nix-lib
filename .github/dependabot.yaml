@@ -1,0 +1,23 @@
+%YAML 1.1
+---
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    commit-message:
+      prefix: deps(actions)
+    directory: /
+    labels:
+      - automated
+      - dependencies
+    schedule:
+      interval: weekly
+  - package-ecosystem: nix
+    commit-message:
+      prefix: deps(flake)
+    directory: /
+    labels:
+      - automated
+      - dependencies
+    schedule:
+      day: friday
+      interval: weekly

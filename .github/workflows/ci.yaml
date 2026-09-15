@@ -1,0 +1,38 @@
+%YAML 1.1
+---
+name: CI
+'on':
+  pull_request:
+    branches:
+      - '*'
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: 0 06 * * MON
+  workflow_dispatch: {}
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+env:
+  NIXPKGS_ALLOW_UNFREE: 1
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: DeterminateSystems/nix-installer-action@v22
+        with:
+          extra-conf: "allow-import-from-derivation = false\nextra-substituters = https://devenv.cachix.org https://nix-community.cachix.org\nextra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      - uses: DeterminateSystems/flake-checker-action@v13
+      - name: Check flake
+        env:
+          NIX_SHOW_STATS: 1
+          NIX_SHOW_STATS_PATH: nix_eval_stats.json
+        run: nix run github:Mic92/nix-fast-build -- --flake .#checks.x86_64-linux --impure --skip-cached --stream-json-lines
+      - name: Upload Nix evaluation statistics
+        uses: actions/upload-artifact@v7
+        with:
+          name: nix-eval-stats-check
+          path: nix_eval_stats.json
