@@ -45,7 +45,8 @@
 
         config = {
           flake = {
-            inherit (default) lib modules overlays;
+            inherit (default) lib modules;
+            overlays.default = default.overlays.pkgs;
           };
           perSystem = {
             terranix.exportDevShells = false;
