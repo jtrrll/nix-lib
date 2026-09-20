@@ -21,15 +21,18 @@ in
       };
     }
   );
-  overlays.default =
-    final: prev:
-    {
-      lib = prev.lib.extend libOverlay;
-    }
-    // lib.mapAttrs' (name: lib.nameValuePair (lib.replaceStrings [ "_" ] [ "-" ] name)) (
-      lib.packagesFromDirectoryRecursive {
-        inherit (final) callPackage;
-        directory = ./pkgs;
+  overlays = {
+    lib = libOverlay;
+    pkgs =
+      final: prev:
+      {
+        lib = prev.lib.extend libOverlay;
       }
-    );
+      // lib.mapAttrs' (name: lib.nameValuePair (lib.replaceStrings [ "_" ] [ "-" ] name)) (
+        lib.packagesFromDirectoryRecursive {
+          inherit (final) callPackage;
+          directory = ./pkgs;
+        }
+      );
+  };
 }

@@ -196,13 +196,14 @@
             }
             ```
 
-            Then import it with a nixpkgs `lib`. It returns an
-            attribute set of `lib`, `modules`, and `overlays`:
+            Then import it with a nixpkgs `lib`. It returns an attribute set of
+            `lib`, `modules`, and separate library and package `overlays`:
 
             ```nix
             inputs:
             let
-              inherit (import inputs.nix-lib { inherit (inputs.nixpkgs) lib; })
+              nix-lib = import inputs.nix-lib { lib = inputs.nixpkgs.lib; };
+              inherit (nix-lib)
                 lib
                 modules
                 overlays
@@ -212,16 +213,17 @@
               # Apply the package overlay to access the new packages and extended lib.
               nixpkgs' = import inputs.nixpkgs {
                 inherit system;
-                overlays = [ overlays.default ];
+                overlays = [ overlays.pkgs ];
               };
 
               # Access reusable modules, grouped by class.
               # Each class exposes its individual modules and a `default` that imports all of them.
-              myNixosConfiguration = lib.nixosSystem {
+              myNixosConfiguration = inputs.nixpkgs.lib.nixosSystem {
+                inherit lib; # Use the extended library during NixOS module evaluation.
                 modules = [
                   modules.nixos.default
                   {
-                    nixpkgs.overlays = [ overlays.default ];
+                    nixpkgs.overlays = [ overlays.pkgs ];
                   }
                   {
                     ...
