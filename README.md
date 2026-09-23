@@ -86,7 +86,7 @@ in
 ### `checks`
 
 <details>
-<summary>Show 23</summary>
+<summary>Show 28</summary>
 
 - `files:.github/CODEOWNERS`
 
@@ -120,6 +120,8 @@ in
 
 - `packages:grout/metadata`
 
+- `packages:grout/romm-version`
+
 - `packages:rahasher/build`
 
 - `packages:rahasher/metadata`
@@ -127,6 +129,14 @@ in
 - `packages:romm/build`
 
 - `packages:romm/metadata`
+
+- `packages:romm/tests/rom-patcher`
+
+- `packages:rompatcher-js/build`
+
+- `packages:rompatcher-js/metadata`
+
+- `packages:rompatcher-js/tests/help`
 
 - `packages:snekcheck/build`
 
@@ -150,13 +160,15 @@ in
 ### `legacyPackages`
 
 <details>
-<summary>Show 4</summary>
+<summary>Show 5</summary>
 
 - `grout` - RomM client for Linux retro handhelds
 
 - `rahasher` - Hashing tool from RALibretro used by RomM for RetroAchievements
 
 - `romm` - Self-hosted ROM manager and player
+
+- `rompatcher-js` - Browser and CLI ROM patching tool
 
 - `snekcheck` - An opinionated filename linter that loves snake case
 
