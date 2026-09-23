@@ -1,6 +1,10 @@
 {
   lib,
   callPackage,
+  nodejs_24,
+  rompatcher-js,
+  runCommand,
+  stdenv,
   writeShellApplication,
   bash,
   coreutils,
@@ -10,7 +14,7 @@
   rahasher ? null,
 }:
 let
-  backend = callPackage ./backend.nix { };
+  backend = callPackage ./backend.nix { inherit rompatcher-js; };
   frontend = callPackage ./frontend.nix { };
   inherit (backend.passthru) pythonEnv;
 
@@ -23,6 +27,7 @@ let
     runtimeInputs = [
       bash
       coreutils
+      nodejs_24
       pythonEnv
     ]
     ++ lib.optional (rahasher != null) rahasher;
@@ -119,6 +124,24 @@ entrypoint.overrideAttrs (old: {
       frontend
       pythonEnv
       ;
+
+    tests.rom-patcher = runCommand "test-romm-rom-patcher" { } (
+      if stdenv.hostPlatform.isLinux then
+        ''
+          printf 'abc' > rom
+          printf 'PATCH\000\000\000\000\003XYZEOF' > patch.ips
+          ${lib.getExe nodejs_24} ${backend}/share/romm/backend/utils/rom_patcher/patcher.js \
+            rom patch.ips patched > result.json
+
+          printf 'XYZ' > expected
+          cmp expected patched
+          grep -Fq '"success":true' result.json
+
+          touch $out
+        ''
+      else
+        "touch $out"
+    );
 
     updateScript = writeShellApplication {
       name = "update-romm";
