@@ -11,6 +11,25 @@
     in
     {
       inherit legacyPackages;
+      checks."packages:grout/romm-version" =
+        let
+          groutVersionComponents = lib.splitVersion legacyPackages.grout.version;
+          requiredRommVersion = lib.concatStringsSep "." (lib.take 3 groutVersionComponents);
+        in
+        pkgs.runCommandLocal "check-grout-romm-version" { } (
+          if lib.length groutVersionComponents < 3 then
+            ''
+              echo "Grout's version must contain at least three components; got ${legacyPackages.grout.version}" >&2
+              exit 1
+            ''
+          else if requiredRommVersion != legacyPackages.romm.version then
+            ''
+              echo "Grout ${legacyPackages.grout.version} requires RomM ${requiredRommVersion}, but RomM is ${legacyPackages.romm.version}" >&2
+              exit 1
+            ''
+          else
+            "touch $out"
+        );
       packageBuildChecks = {
         enable = true;
         packages = overlayPackages;

@@ -9,6 +9,7 @@
   jq,
   nix-update-script,
   python313,
+  rompatcher-js,
   stdenvNoCC,
   writeShellApplication,
 }:
@@ -138,6 +139,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     runHook preInstall
     mkdir -p $out/share/romm
     cp -r backend $out/share/romm/backend
+    cp -r ${rompatcher-js.lib}/share/rompatcher-js/rom-patcher-js $out/share/romm/backend/utils/rom_patcher/rom-patcher-js
     cp -r alembic.ini $out/share/romm/ 2>/dev/null || true
     ln -s ${pythonEnv} $out/share/romm/python-env
     runHook postInstall
