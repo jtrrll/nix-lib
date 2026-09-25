@@ -2,10 +2,11 @@
   lib,
   stdenvNoCC,
   patchelf,
+  jq,
   grout,
+  SDL2,
   SDL2_gfx,
   glibc,
-  sdl2-compat,
   tzdata,
   iana-etc,
   mailcap,
@@ -22,9 +23,7 @@ stdenvNoCC.mkDerivation {
 
   inherit (grout) src;
 
-  nativeBuildInputs = [
-    patchelf
-  ];
+  nativeBuildInputs = [ patchelf ] ++ lib.optional (spec.name == "NextUI") jq;
 
   dontConfigure = true;
   dontBuild = true;
@@ -36,7 +35,7 @@ stdenvNoCC.mkDerivation {
   # They're allowed here explicitly so genuinely new store references are still caught.
   allowedReferences = [
     glibc
-    sdl2-compat
+    SDL2
     tzdata
     iana-etc
     mailcap
@@ -52,19 +51,16 @@ stdenvNoCC.mkDerivation {
     install -Dm755 ${grout}/bin/grout "$appdir/grout"
     patchelf --set-interpreter ${loader} --set-rpath '$ORIGIN/lib' "$appdir/grout"
 
-    for so in ${lib.getLib SDL2_gfx}/lib/libSDL2_gfx*.so*; do
-      if [ -e "$so" ]; then
-        dest="$appdir/lib/$(basename "$so")"
-        cp -aL "$so" "$dest"
-        chmod u+w "$dest"
-        # Drop the nixpkgs-build RPATH (pointing at sdl2-compat/glibc/etc in
-        # the store); the device's own loader config resolves its deps.
-        patchelf --remove-rpath "$dest" || true
-      fi
-    done
+    cp -L ${lib.getLib SDL2_gfx}/lib/libSDL2_gfx-1.0.so.0 "$appdir/lib/libSDL2_gfx-1.0.so.0"
+    chmod u+w "$appdir/lib/libSDL2_gfx-1.0.so.0"
+    patchelf --remove-rpath "$appdir/lib/libSDL2_gfx-1.0.so.0"
 
     cp ${spec.launchSource} "$workdir/${spec.launchDest}"
     ${lib.concatMapStringsSep "\n" (a: ''cp -R ${a.src} "$appdir/${a.dest}"'') spec.assets}
+    ${lib.optionalString (spec.name == "NextUI") ''
+      jq '.platforms |= (. + ["h700"] | unique)' "$appdir/pak.json" > "$appdir/pak.json.tmp"
+      mv "$appdir/pak.json.tmp" "$appdir/pak.json"
+    ''}
 
     chmod -R u+w "$workdir"
     chmod a+x "$appdir/grout" "$workdir/${spec.launchDest}"

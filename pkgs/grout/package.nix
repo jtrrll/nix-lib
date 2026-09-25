@@ -12,6 +12,29 @@
   libx11,
   nix-update-script,
 }:
+let
+  handheldSDL2 = callPackage ./sdl2.nix { };
+  mkNextUIPak =
+    sdl2: spec:
+    let
+      image = SDL2_image.override { SDL2 = sdl2; };
+      ttf = SDL2_ttf.override { SDL2 = sdl2; };
+      gfx = SDL2_gfx.override { SDL2 = sdl2; };
+    in
+    callPackage ./pak.nix {
+      grout = callPackage ./package.nix {
+        SDL2 = sdl2;
+        SDL2_image = image;
+        SDL2_ttf = ttf;
+        SDL2_gfx = gfx;
+      };
+      SDL2 = sdl2;
+      SDL2_gfx = gfx;
+      spec = spec // {
+        name = "NextUI";
+      };
+    };
+in
 buildGoModule (finalAttrs: {
   pname = "grout";
   version = "5.2.0.0";
@@ -68,23 +91,23 @@ buildGoModule (finalAttrs: {
 
     # Firmware "pak" bundles for running grout on retro handhelds.
     paks =
-      lib.mapAttrs'
-        (
-          name: spec:
-          lib.nameValuePair (lib.toLower name) (
+      let
+        specs = import ./paks.nix { inherit (finalAttrs) src; };
+      in
+      lib.mapAttrs' (
+        name: spec:
+        lib.nameValuePair (lib.toLower name) (
+          if name == "NextUI" then
+            mkNextUIPak handheldSDL2 spec
+          else
             callPackage ./pak.nix {
               grout = finalAttrs.finalPackage;
               spec = spec // {
                 inherit name;
               };
             }
-          )
         )
-        (
-          import ./paks.nix {
-            inherit (finalAttrs) src;
-          }
-        );
+      ) specs;
   };
 
   meta = {
