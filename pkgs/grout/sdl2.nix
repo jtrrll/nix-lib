@@ -6,7 +6,7 @@
   stdenv,
 }:
 stdenv.mkDerivation {
-  pname = "grout-sdl2";
+  pname = "sdl2";
   version = "2.28.5";
 
   src = fetchurl {

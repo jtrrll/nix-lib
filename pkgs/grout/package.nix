@@ -12,29 +12,6 @@
   libx11,
   nix-update-script,
 }:
-let
-  handheldSDL2 = callPackage ./sdl2.nix { };
-  mkNextUIPak =
-    sdl2: spec:
-    let
-      image = SDL2_image.override { SDL2 = sdl2; };
-      ttf = SDL2_ttf.override { SDL2 = sdl2; };
-      gfx = SDL2_gfx.override { SDL2 = sdl2; };
-    in
-    callPackage ./pak.nix {
-      grout = callPackage ./package.nix {
-        SDL2 = sdl2;
-        SDL2_image = image;
-        SDL2_ttf = ttf;
-        SDL2_gfx = gfx;
-      };
-      SDL2 = sdl2;
-      SDL2_gfx = gfx;
-      spec = spec // {
-        name = "NextUI";
-      };
-    };
-in
 buildGoModule (finalAttrs: {
   pname = "grout";
   version = "5.2.0.0";
@@ -93,19 +70,29 @@ buildGoModule (finalAttrs: {
     paks =
       let
         specs = import ./paks.nix { inherit (finalAttrs) src; };
+        # keep-sorted start block=yes
+        SDL2' = callPackage ./sdl2.nix { };
+        SDL2_image' = SDL2_image.override { SDL2 = SDL2'; };
+        SDL2_ttf' = SDL2_ttf.override { SDL2 = SDL2'; };
+        SDL2_gfx' = SDL2_gfx.override { SDL2 = SDL2'; };
+        # keep-sorted end
       in
       lib.mapAttrs' (
         name: spec:
         lib.nameValuePair (lib.toLower name) (
-          if name == "NextUI" then
-            mkNextUIPak handheldSDL2 spec
-          else
-            callPackage ./pak.nix {
-              grout = finalAttrs.finalPackage;
-              spec = spec // {
-                inherit name;
-              };
-            }
+          callPackage ./pak.nix {
+            grout = callPackage ./package.nix {
+              SDL2 = SDL2';
+              SDL2_image = SDL2_image';
+              SDL2_ttf = SDL2_ttf';
+              SDL2_gfx = SDL2_gfx';
+            };
+            SDL2 = SDL2';
+            SDL2_gfx = SDL2_gfx';
+            spec = spec // {
+              inherit name;
+            };
+          }
         )
       ) specs;
   };
