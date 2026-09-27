@@ -1,40 +1,22 @@
-{ src }:
 {
-  ROCKNIX = {
-    appDir = "Grout";
-    launchSource = "${src}/scripts/ROCKNIX/Grout.sh";
-    launchDest = "Grout.sh";
-    assets = [
-      {
-        src = "${src}/scripts/ROCKNIX/logo.png";
-        dest = "logo.png";
-      }
-    ];
-    package = workdir: out: ''
-      cp -R "${workdir}/." "${out}/"
+  ROCKNIX = _: _: {
+    postInstall = ''
+      mkdir -p "$out/Grout"
+      mv "$staging/grout" "$staging/lib" "$out/Grout/"
+      cp "$src/scripts/ROCKNIX/Grout.sh" "$out/Grout.sh"
+      cp "$src/scripts/ROCKNIX/logo.png" "$src/README.md" "$src/LICENSE" "$out/Grout/"
+      chmod a+x "$out/Grout.sh"
     '';
   };
 
-  NextUI = {
-    appDir = "Grout.pak";
-    launchSource = "${src}/scripts/NextUI/launch.sh";
-    launchDest = "Grout.pak/launch.sh";
-    assets = [
-      {
-        src = "${src}/pak.json";
-        dest = "pak.json";
-      }
-      {
-        src = "${src}/README.md";
-        dest = "README.md";
-      }
-      {
-        src = "${src}/LICENSE";
-        dest = "LICENSE";
-      }
-    ];
-    package = workdir: out: ''
-      cp -R "${workdir}/." "${out}/"
+  NextUI = _: _: {
+    postInstall = ''
+      mkdir -p "$out/Grout.pak"
+      mv "$staging/grout" "$staging/lib" "$out/Grout.pak/"
+      cp "$src/scripts/NextUI/launch.sh" "$src/README.md" "$src/LICENSE" "$src/pak.json" "$out/Grout.pak/"
+      jq '.platforms |= (. + ["h700"] | unique)' "$out/Grout.pak/pak.json" > "$out/Grout.pak/pak.json.tmp"
+      mv "$out/Grout.pak/pak.json.tmp" "$out/Grout.pak/pak.json"
+      chmod a+x "$out/Grout.pak/launch.sh"
     '';
   };
 }
