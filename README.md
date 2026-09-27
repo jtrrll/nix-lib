@@ -86,7 +86,7 @@ in
 ### `checks`
 
 <details>
-<summary>Show 28</summary>
+<summary>Show 30</summary>
 
 - `files:.github/CODEOWNERS`
 
@@ -113,6 +113,10 @@ in
 - `files:LICENSE`
 
 - `files:README.md`
+
+- `grout-nextui-pak/build`
+
+- `grout-rocknix-pak/build`
 
 - `lib`
 

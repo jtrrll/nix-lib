@@ -68,23 +68,38 @@ buildGoModule (finalAttrs: {
 
     # Firmware "pak" bundles for running grout on retro handhelds.
     paks =
-      lib.mapAttrs'
-        (
-          name: spec:
-          lib.nameValuePair (lib.toLower name) (
-            callPackage ./pak.nix {
-              grout = finalAttrs.finalPackage;
-              spec = spec // {
-                inherit name;
+      let
+        # keep-sorted start block=yes
+        SDL2' = callPackage ./sdl2.nix { };
+        SDL2_image' = SDL2_image.override { SDL2 = SDL2'; };
+        SDL2_ttf' = SDL2_ttf.override { SDL2 = SDL2'; };
+        SDL2_gfx' = SDL2_gfx.override { SDL2 = SDL2'; };
+        # keep-sorted end
+        pak = callPackage ./pak.nix {
+          grout = callPackage ./package.nix {
+            SDL2 = SDL2';
+            SDL2_image = SDL2_image';
+            SDL2_ttf = SDL2_ttf';
+            SDL2_gfx = SDL2_gfx';
+          };
+          SDL2_gfx = SDL2_gfx';
+        };
+      in
+      lib.mapAttrs' (
+        name: override:
+        lib.nameValuePair (lib.toLower name) (
+          pak.overrideAttrs (
+            finalAttrs: previousAttrs:
+            (override finalAttrs previousAttrs)
+            // {
+              pname = "grout-pak-${lib.toLower name}";
+              meta = previousAttrs.meta // {
+                description = "RomM grout client packaged as a ${name} app";
               };
             }
           )
         )
-        (
-          import ./paks.nix {
-            inherit (finalAttrs) src;
-          }
-        );
+      ) (import ./paks.nix);
   };
 
   meta = {
