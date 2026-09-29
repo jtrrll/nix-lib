@@ -86,7 +86,7 @@ in
 ### `checks`
 
 <details>
-<summary>Show 30</summary>
+<summary>Show 33</summary>
 
 - `files:.github/CODEOWNERS`
 
@@ -120,11 +120,17 @@ in
 
 - `lib`
 
+- `packages:baseos/metadata`
+
 - `packages:grout/build`
 
 - `packages:grout/metadata`
 
 - `packages:grout/romm-version`
+
+- `packages:nextui-h700/build`
+
+- `packages:nextui-h700/metadata`
 
 - `packages:rahasher/build`
 
@@ -164,9 +170,13 @@ in
 ### `legacyPackages`
 
 <details>
-<summary>Show 5</summary>
+<summary>Show 7</summary>
+
+- `baseos` - Bootable BaseOS image for the Anbernic rgsp
 
 - `grout` - RomM client for Linux retro handhelds
+
+- `nextui-h700` - NextUI frontend card contents for Anbernic H700 handhelds
 
 - `rahasher` - Hashing tool from RALibretro used by RomM for RetroAchievements
 
