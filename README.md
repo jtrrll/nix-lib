@@ -86,7 +86,7 @@ in
 ### `checks`
 
 <details>
-<summary>Show 34</summary>
+<summary>Show 33</summary>
 
 - `files:.github/CODEOWNERS`
 
@@ -119,8 +119,6 @@ in
 - `grout-rocknix-pak/build`
 
 - `lib`
-
-- `packages:baseos/build`
 
 - `packages:baseos/metadata`
 

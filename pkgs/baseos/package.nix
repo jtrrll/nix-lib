@@ -63,6 +63,9 @@ let
   meta = {
     homepage = "https://github.com/pvaibhav/BaseOS";
     license = lib.licenses.unfree;
+    maintainers = [
+      lib.maintainers.jtrrll
+    ];
     platforms = lib.platforms.all;
     sourceProvenance = [ lib.sourceTypes.binaryFirmware ];
   };
