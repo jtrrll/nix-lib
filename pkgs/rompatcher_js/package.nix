@@ -20,7 +20,20 @@ buildNpmPackage (finalAttrs: {
     owner = "marcrobledo";
     repo = "RomPatcher.js";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-bIEvna+8Xfb+np8V3vFRPxtWrlNjEKd0CDp2ayoKnGM=";
+    hash = "sha256-LJnNlBCzOTkAE5bWowa8RhDiPWvyURK1pUvtftWQ9fE=";
+    postFetch = ''
+      cd "$out"
+      rm -rf \
+        legacy \
+        webapp \
+        rom-patcher-js/modules/bz2 \
+        index.html \
+        index_template.html \
+        _cache_service_worker.js \
+        manifest.json \
+        .gitignore \
+        .nojekyll
+    '';
   };
 
   postPatch = ''
@@ -39,6 +52,20 @@ buildNpmPackage (finalAttrs: {
   nodejs = nodejs_24;
 
   dontNpmBuild = true;
+
+  doCheck = true;
+  checkPhase = ''
+    runHook preCheck
+
+    output="$(node test.js)"
+    echo "$output"
+    if grep -q '×' <<< "$output"; then
+      echo "rom-patcher-js self-test reported failures"
+      exit 1
+    fi
+
+    runHook postCheck
+  '';
 
   nativeBuildInputs = [ makeWrapper ];
 
@@ -69,7 +96,10 @@ buildNpmPackage (finalAttrs: {
   meta = {
     description = "Browser and CLI ROM patching tool";
     homepage = "https://github.com/marcrobledo/RomPatcher.js";
-    license = lib.licenses.mit;
+    license = [
+      lib.licenses.mit
+      lib.licenses.bsd3
+    ];
     mainProgram = "rompatcher-js";
     maintainers = [ lib.maintainers.jtrrll ];
     outputsToInstall = [ "out" ];

@@ -28,7 +28,10 @@ in
       };
 
       config.checks = lib.mkIf cfg.enable (
-        lib.mapAttrs' (name: package: lib.nameValuePair "packages:${name}/build" package) cfg.packages
+        lib.pipe cfg.packages [
+          (lib.filterAttrs (_: package: package.meta.license.redistributable or true))
+          (lib.mapAttrs' (name: package: lib.nameValuePair "packages:${name}/build" package))
+        ]
       );
     }
   );

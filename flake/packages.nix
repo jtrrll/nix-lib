@@ -144,19 +144,6 @@
           )
           (
             meta:
-            if meta.license.free or false then
-              {
-                success = true;
-                error = null;
-              }
-            else
-              {
-                success = false;
-                error = "The license must be free";
-              }
-          )
-          (
-            meta:
             if meta ? maintainers then
               {
                 success = true;
