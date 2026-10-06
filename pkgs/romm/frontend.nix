@@ -1,5 +1,6 @@
 {
   lib,
+  stdenv,
   buildNpmPackage,
   fetchFromGitHub,
   nix-update-script,
@@ -22,7 +23,7 @@ buildNpmPackage (finalAttrs: {
   makeCacheWritable = true;
 
   passthru.updateScript = nix-update-script {
-    attrPath = "romm.passthru.frontend";
+    attrPath = "legacyPackages.${stdenv.hostPlatform.system}.romm.passthru.frontend";
     extraArgs = [ "--flake" ];
   };
 

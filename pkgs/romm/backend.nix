@@ -227,7 +227,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
         # Finally bump the backend release itself.
         ${lib.escapeShellArgs (
           map toString (nix-update-script {
-            attrPath = "romm.passthru.backend";
+            attrPath = "legacyPackages.${stdenvNoCC.hostPlatform.system}.romm.passthru.backend";
             extraArgs = [ "--flake" ];
           })
         )}

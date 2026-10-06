@@ -58,7 +58,7 @@ buildGoModule (finalAttrs: {
 
   passthru = {
     updateScript = nix-update-script {
-      attrPath = "grout";
+      attrPath = "legacyPackages.${stdenv.hostPlatform.system}.grout";
       extraArgs = [
         "--flake"
         "--version-regex"

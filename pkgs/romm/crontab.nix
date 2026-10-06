@@ -6,12 +6,12 @@
 }:
 buildPythonPackage rec {
   pname = "crontab";
-  version = "1.0.4";
+  version = "1.0.5";
   pyproject = true;
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256:715b0e5e105bc62c9683cbb93c1cc5821e07a3e28d17404576d22dba7a896c92";
+    hash = "sha256-+A4BtPByGXY6mGn5Jt0XFHJ455ZakoCJvKbT3ICuRtU=";
   };
 
   build-system = [ setuptools ];
