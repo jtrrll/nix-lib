@@ -7,7 +7,7 @@
 }:
 buildGoModule (finalAttrs: {
   pname = "snekcheck";
-  version = "0.1.0";
+  version = "0.1.0-unstable-2025-11-25";
 
   src = fetchFromGitHub {
     owner = "jtrrll";

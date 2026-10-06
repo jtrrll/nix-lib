@@ -33,21 +33,21 @@ let
       });
 
       starlette = prev.starlette.overridePythonAttrs (_old: rec {
-        version = "1.0.1";
+        version = "1.6.0";
         src = fetchPypi {
           pname = "starlette";
           inherit version;
-          hash = "sha256-USOZxfHef6yZyIVyIS3tnd7d7y+zKvqC1yQADoizj08=";
+          hash = "sha256-1OOsXlRkRJYMcQKXo8n8P3664bfpY/PTYXO0naU1vps=";
         };
         dontUsePytestCheck = true;
       });
 
       fastapi-pagination = prev.fastapi-pagination.overridePythonAttrs (_old: rec {
-        version = "0.15.0";
+        version = "0.16.0";
         src = fetchPypi {
           pname = "fastapi_pagination";
           inherit version;
-          hash = "sha256-Ef45y+GB7TwYkZuQ+va/y+QMtZaqnFKpi7zoURGimk8=";
+          hash = "sha256-MVgkhzBi4aF4SHe8pfJ0CJpNuynzQq7/giyh9QvJlGo=";
         };
       });
     };
@@ -117,13 +117,13 @@ let
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "romm-backend";
-  version = "5.2.0";
+  version = "5.3.1";
 
   src = fetchFromGitHub {
     owner = "rommapp";
     repo = "romm";
     tag = finalAttrs.version;
-    hash = "sha256-ixRgaDnyHzHWJjvC5yB6pD88aUgwtnkF6H7snAFODrE=";
+    hash = "sha256-ijfp4L4GdGbr4FcBo83xVnGEksXawrkK3rYe8/Is+NU=";
   };
 
   # Upstream's release CI replaces the `<version>` placeholder in

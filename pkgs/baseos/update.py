@@ -47,11 +47,14 @@ def write_if_changed(path: Path, original: str, updated: str) -> None:
 
 
 def main(path: Path) -> None:
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    curl_args = ["curl", "-fsSL"]
+    if token:
+        curl_args += ["-H", f"Authorization: Bearer {token}"]
     release = json.loads(
         subprocess.run(
             [
-                "curl",
-                "-fsSL",
+                *curl_args,
                 "https://api.github.com/repos/pvaibhav/BaseOS/releases/latest",
             ],
             check=True,

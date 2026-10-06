@@ -4,26 +4,28 @@
   fetchFromGitHub,
   setuptools,
   crontab,
+  freezegun,
   python-dateutil,
   rq,
 }:
 buildPythonPackage {
   pname = "rq-scheduler";
-  version = "0.14.0-unstable-2025";
+  version = "0.14.0-unstable-2025-05-17";
   pyproject = true;
 
   # RomM depends on a fork adding username/SSL support to the RQ scheduler.
   src = fetchFromGitHub {
     owner = "adamantike";
     repo = "rq-scheduler";
-    rev = "39583cb2a00c6faa12ef34c7277893064a83c4de";
-    hash = "sha256-VOgMuzSDwCIWOlWc2+dxZHXqO3IigTi0F7ZRAzbgzLE=";
+    rev = "134c2eb1b8c65510bc1b8fdfdbe787decef890f2";
+    hash = "sha256-V/Tnxm3AeDtmE0Tyyfh6f0H2f1d13+Scs/gXpZDRnZI=";
   };
 
   build-system = [ setuptools ];
 
   dependencies = [
     crontab
+    freezegun
     python-dateutil
     rq
   ];
