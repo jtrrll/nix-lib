@@ -17,10 +17,8 @@ let
   python = python313.override {
     self = python;
     packageOverrides = final: prev: {
-      crontab = final.callPackage ./crontab.nix { };
       strsimpy = final.callPackage ./strsimpy.nix { };
       zipfile-inflate64 = final.callPackage ./zipfile_inflate64.nix { };
-      rq-scheduler = final.callPackage ./rq_scheduler.nix { };
 
       fastapi = prev.fastapi.overridePythonAttrs (_old: rec {
         version = "0.134.0";
@@ -33,11 +31,11 @@ let
       });
 
       starlette = prev.starlette.overridePythonAttrs (_old: rec {
-        version = "1.0.1";
+        version = "1.6.0";
         src = fetchPypi {
           pname = "starlette";
           inherit version;
-          hash = "sha256-USOZxfHef6yZyIVyIS3tnd7d7y+zKvqC1yQADoizj08=";
+          hash = "sha256-1OOsXlRkRJYMcQKXo8n8P3664bfpY/PTYXO0naU1vps=";
         };
         dontUsePytestCheck = true;
       });
@@ -94,7 +92,6 @@ let
     ps.pyyaml
     ps.redis
     ps.rq
-    ps.rq-scheduler
     ps.sentry-sdk
     ps.sqlalchemy
     ps.starlette
@@ -117,13 +114,13 @@ let
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "romm-backend";
-  version = "5.2.0";
+  version = "5.3.1";
 
   src = fetchFromGitHub {
     owner = "rommapp";
     repo = "romm";
     tag = finalAttrs.version;
-    hash = "sha256-ixRgaDnyHzHWJjvC5yB6pD88aUgwtnkF6H7snAFODrE=";
+    hash = "sha256-ijfp4L4GdGbr4FcBo83xVnGEksXawrkK3rYe8/Is+NU=";
   };
 
   # Upstream's release CI replaces the `<version>` placeholder in
@@ -161,6 +158,13 @@ stdenvNoCC.mkDerivation (finalAttrs: {
         export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
         root="$(git rev-parse --show-toplevel)"
 
+        # Resolve RomM's upcoming release and its locked dependency versions
+        # up front, so every PyPI sub-dependency below is pinned against the
+        # same `uv.lock` the backend bump at the end of this script will move
+        # the `romm` package to.
+        tag="$(curl -sfL https://api.github.com/repos/rommapp/romm/releases/latest | jq -r '.tag_name')"
+        lock="$(curl -sfL "https://raw.githubusercontent.com/rommapp/romm/$tag/uv.lock")"
+
         nix_sri() {
           nix --extra-experimental-features nix-command hash convert \
             --hash-algo sha256 --to sri "$1"
@@ -179,45 +183,47 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
         # PROJECT is the PyPI project; SELECT is a jq predicate picking the
         # sdist vs wheel release file.
-        update_pypi() {
-          local file="$1" project="$2" select="$3" anchor="''${4:-}"
-          local latest hex
-          echo "==> $project (pypi)"
-          latest="$(curl -sfL "https://pypi.org/pypi/$project/json" | jq -r '.info.version')"
-          hex="$(curl -sfL "https://pypi.org/pypi/$project/$latest/json" \
-            | jq -r "first(.urls[] | select($select) | .digests.sha256) // empty")"
-          if [ -z "$hex" ]; then
-            echo "::error::no matching release file for $project $latest" >&2
-            return 1
-          fi
-          edit_version_hash "$file" "$latest" "$(nix_sri "$hex")" "$anchor"
+        #
+        # RomM's `pyproject.toml` pins are PEP 440 "compatible release" (~=)
+        # ranges, which don't account for *cross*-package constraints (e.g.
+        # fastapi-pagination releases newer than 0.15.x require a newer
+        # fastapi than RomM itself allows). Blindly fetching PyPI's "latest"
+        # release can silently pick a version that's in-range for RomM's own
+        # pin but incompatible with its other pinned dependencies. RomM's own
+        # `uv.lock` is the ground truth: it's whatever version upstream's
+        # resolver already verified is mutually compatible, so read the
+        # pinned version from there instead of guessing from "latest".
+        locked_version() {
+          local project="$1"
+          printf '%s\n' "$lock" | awk -v name="$project" '
+            $0 == "name = \"" name "\"" { found = 1; next }
+            found && /^version = / { gsub(/"/, "", $3); print $3; exit }
+          '
         }
 
-        # A pinned fork tracked on its default branch, versioned as
-        # <base>-unstable-<commit date>.
-        update_github_unstable() {
-          local file="$1" owner="$2" repo="$3" base="$4"
-          local rev date sri
-          echo "==> $owner/$repo (github)"
-          rev="$(git ls-remote "https://github.com/$owner/$repo" HEAD | cut -f1)"
-          date="$(curl -sfL "https://api.github.com/repos/$owner/$repo/commits/$rev" \
-            | jq -r '.commit.committer.date[0:10]')"
-          sri="$(nix_sri "$(nix-prefetch-url --unpack \
-            "https://github.com/$owner/$repo/archive/$rev.tar.gz")")"
-          sed -i \
-            -e "s|rev = \"[^\"]*\"|rev = \"$rev\"|" \
-            -e "s|version = \"[^\"]*\"|version = \"$base-unstable-$date\"|" \
-            -e "s|hash = \"[^\"]*\"|hash = \"$sri\"|" \
-            "$file"
+        update_pypi() {
+          local file="$1" project="$2" select="$3" anchor="''${4:-}"
+          local version hex
+          echo "==> $project (pypi)"
+          version="$(locked_version "$project")"
+          if [ -z "$version" ]; then
+            echo "::error::$project not found in romm's uv.lock ($tag)" >&2
+            return 1
+          fi
+          hex="$(curl -sfL "https://pypi.org/pypi/$project/$version/json" \
+            | jq -r "first(.urls[] | select($select) | .digests.sha256) // empty")"
+          if [ -z "$hex" ]; then
+            echo "::error::no matching release file for $project $version" >&2
+            return 1
+          fi
+          edit_version_hash "$file" "$version" "$(nix_sri "$hex")" "$anchor"
         }
 
         sdist='.packagetype == "sdist"'
         wheel='.packagetype == "bdist_wheel" and (.filename | endswith("py3-none-any.whl"))'
 
-        update_pypi "$root/pkgs/romm/crontab.nix"           crontab           "$sdist"
         update_pypi "$root/pkgs/romm/strsimpy.nix"          strsimpy          "$sdist"
         update_pypi "$root/pkgs/romm/zipfile_inflate64.nix" zipfile-inflate64 "$wheel"
-        update_github_unstable "$root/pkgs/romm/rq_scheduler.nix" adamantike rq-scheduler 0.14.0
 
         backend="$root/pkgs/romm/backend.nix"
         update_pypi "$backend" fastapi            "$sdist" 'fastapi = prev\.fastapi\.overridePythonAttrs'
@@ -227,7 +233,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
         # Finally bump the backend release itself.
         ${lib.escapeShellArgs (
           map toString (nix-update-script {
-            attrPath = "romm.passthru.backend";
+            attrPath = "legacyPackages.${stdenvNoCC.hostPlatform.system}.romm.passthru.backend";
             extraArgs = [ "--flake" ];
           })
         )}

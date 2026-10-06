@@ -14,7 +14,7 @@ buildPythonPackage rec {
     inherit version format;
     dist = "py3";
     python = "py3";
-    hash = "sha256:b444f3aea904061d702edbed58f952e544a19dcf20f2ed84bd889cf446b87b7d";
+    hash = "sha256-tETzrqkEBh1wLtvtWPlS5UShnc8g8u2EvYic9Ea4e30=";
   };
 
   dependencies = [ inflate64 ];

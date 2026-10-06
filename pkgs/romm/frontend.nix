@@ -1,28 +1,29 @@
 {
   lib,
+  stdenv,
   buildNpmPackage,
   fetchFromGitHub,
   nix-update-script,
 }:
 buildNpmPackage (finalAttrs: {
   pname = "romm-frontend";
-  version = "5.2.0";
+  version = "5.3.1";
 
   src = fetchFromGitHub {
     owner = "rommapp";
     repo = "romm";
     tag = finalAttrs.version;
-    hash = "sha256-ixRgaDnyHzHWJjvC5yB6pD88aUgwtnkF6H7snAFODrE=";
+    hash = "sha256-ijfp4L4GdGbr4FcBo83xVnGEksXawrkK3rYe8/Is+NU=";
   };
 
   sourceRoot = "${finalAttrs.src.name}/frontend";
 
-  npmDepsHash = "sha256-k3MYizMevOfYJGRlu650bx1ERUkMBYdvg/JctmdwATo=";
+  npmDepsHash = "sha256-x8Chw4nMoyq0M+m4XhIgqNu8Lgr4U7w38V7CYrd1zK4=";
 
   makeCacheWritable = true;
 
   passthru.updateScript = nix-update-script {
-    attrPath = "romm.passthru.frontend";
+    attrPath = "legacyPackages.${stdenv.hostPlatform.system}.romm.passthru.frontend";
     extraArgs = [ "--flake" ];
   };
 

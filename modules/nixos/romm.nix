@@ -117,6 +117,20 @@ let
           '';
         };
 
+        group = lib.mkOption {
+          type = lib.types.str;
+          default = "romm";
+          description = ''
+            Group that owns the `romm` user and {option}`services.romm.dataDir`/
+            {option}`services.romm.libraryDir`.
+
+            Set this to an existing shared group (e.g. a media library group also
+            used by other services) to grant it access to RomM's data and library
+            directories via the setgid bit, instead of the default dedicated
+            `romm` group.
+          '';
+        };
+
         baseUrl = lib.mkOption {
           type = lib.types.str;
           default = "http://0.0.0.0";
@@ -265,17 +279,17 @@ let
 
         users.users.romm = {
           isSystemUser = true;
-          group = "romm";
+          inherit (cfg) group;
           home = cfg.dataDir;
         };
-        users.groups.romm = { };
+        users.groups.romm = lib.mkIf (cfg.group == "romm") { };
 
         systemd.tmpfiles.rules = [
-          "d ${cfg.dataDir} 0750 romm romm -"
-          "d ${cfg.dataDir}/resources 0750 romm romm -"
-          "d ${cfg.dataDir}/assets 0750 romm romm -"
-          "d ${cfg.dataDir}/config 0750 romm romm -"
-          "d ${cfg.libraryDir} 0750 romm romm -"
+          "d ${cfg.dataDir} 2770 romm ${cfg.group} -"
+          "d ${cfg.dataDir}/resources 2770 romm ${cfg.group} -"
+          "d ${cfg.dataDir}/assets 2770 romm ${cfg.group} -"
+          "d ${cfg.dataDir}/config 2770 romm ${cfg.group} -"
+          "d ${cfg.libraryDir} 2770 romm ${cfg.group} -"
         ];
 
         services.redis.servers.romm = {
@@ -298,7 +312,7 @@ let
           serviceConfig = {
             ExecStart = lib.getExe cfg.package;
             User = "romm";
-            Group = "romm";
+            Group = cfg.group;
             EnvironmentFile = cfg.environmentFiles;
             RuntimeDirectory = "romm";
             RuntimeDirectoryMode = "0750";
@@ -311,7 +325,7 @@ let
 
         # njs backs the internal `/decode` route; mod_zip (nginxModules.zip)
         # backs streamed multi-file ROM downloads.
-        users.users.${config.services.nginx.user}.extraGroups = lib.mkIf cfg.nginx.enable [ "romm" ];
+        users.users.${config.services.nginx.user}.extraGroups = lib.mkIf cfg.nginx.enable [ cfg.group ];
 
         services.nginx = lib.mkIf cfg.nginx.enable {
           enable = true;

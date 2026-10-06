@@ -65,7 +65,7 @@ stdenv.mkDerivation (finalAttrs: {
   '';
 
   passthru.updateScript = nix-update-script {
-    attrPath = "rahasher";
+    attrPath = "legacyPackages.${stdenv.hostPlatform.system}.rahasher";
     extraArgs = [ "--flake" ];
   };
 
