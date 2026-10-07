@@ -72,9 +72,6 @@ buildGoModule (finalAttrs: {
       let
         groutVersionComponents = lib.splitVersion finalAttrs.version;
         requiredRommVersion = lib.concatStringsSep "." (lib.take 3 groutVersionComponents);
-        # RomM itself is no longer packaged here (nixpkgs now ships its own
-        # `services.romm` module/package) — check against that.
-        knownRommVersion = romm.version;
       in
       runCommandLocal "check-grout-romm-version" { } (
         if lib.length groutVersionComponents < 3 then
@@ -82,9 +79,9 @@ buildGoModule (finalAttrs: {
             echo "Grout's version must contain at least three components; got ${finalAttrs.version}" >&2
             exit 1
           ''
-        else if requiredRommVersion != knownRommVersion then
+        else if requiredRommVersion != romm.version then
           ''
-            echo "Grout ${finalAttrs.version} requires RomM ${requiredRommVersion}, but nixpkgs' RomM is ${knownRommVersion}" >&2
+            echo "Grout ${finalAttrs.version} requires RomM ${requiredRommVersion}, but nixpkgs' RomM is ${romm.version}" >&2
             exit 1
           ''
         else
