@@ -11,19 +11,21 @@
   SDL2_gfx,
   libx11,
   nix-update-script,
+  runCommandLocal,
+  romm,
 }:
 buildGoModule (finalAttrs: {
   pname = "grout";
-  version = "5.3.1.3";
+  version = "5.2.0.0";
 
   src = fetchFromGitHub {
     owner = "rommapp";
     repo = "grout";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-ET+bHN2czvFNEEs1ERuDc7zskWWiuoNRwt2vYM03f10=";
+    hash = "sha256-kikwYNbvnCvWla6jZKwbbKCN/3X7vAX06uf7XBVaKjQ=";
   };
 
-  vendorHash = "sha256-vBMztRPRq4E3nwQUy/bwi4j1albw3y0WTQKqd1WxxJ8=";
+  vendorHash = "sha256-earNKxaG8FCkBo5qQWK4ismu+PznPph+asgMg6jRTlc=";
 
   subPackages = [ "app" ];
 
@@ -65,6 +67,26 @@ buildGoModule (finalAttrs: {
         "v([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)"
       ];
     };
+
+    tests.romm-version =
+      let
+        groutVersionComponents = lib.splitVersion finalAttrs.version;
+        requiredRommVersion = lib.concatStringsSep "." (lib.take 3 groutVersionComponents);
+      in
+      runCommandLocal "check-grout-romm-version" { } (
+        if lib.length groutVersionComponents < 3 then
+          ''
+            echo "Grout's version must contain at least three components; got ${finalAttrs.version}" >&2
+            exit 1
+          ''
+        else if requiredRommVersion != romm.version then
+          ''
+            echo "Grout ${finalAttrs.version} requires RomM ${requiredRommVersion}, but nixpkgs' RomM is ${romm.version}" >&2
+            exit 1
+          ''
+        else
+          "touch $out"
+      );
 
     # Firmware "pak" bundles for running grout on retro handhelds.
     paks =
