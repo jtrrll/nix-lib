@@ -16,16 +16,16 @@
 }:
 buildGoModule (finalAttrs: {
   pname = "grout";
-  version = "5.2.0.0";
+  version = "5.3.1.4";
 
   src = fetchFromGitHub {
     owner = "rommapp";
     repo = "grout";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-kikwYNbvnCvWla6jZKwbbKCN/3X7vAX06uf7XBVaKjQ=";
+    hash = "sha256-/JBJ3fvVm+TmYL+4XSYb8AAxE7jkWhMSAkO5MnWYNDY=";
   };
 
-  vendorHash = "sha256-earNKxaG8FCkBo5qQWK4ismu+PznPph+asgMg6jRTlc=";
+  vendorHash = "sha256-5r7Slxko8CY4lGm4obTfXADV+Gbrw2prkB0tseS9nIU=";
 
   subPackages = [ "app" ];
 
