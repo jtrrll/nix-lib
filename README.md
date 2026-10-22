@@ -86,7 +86,7 @@ in
 ### `checks`
 
 <details>
-<summary>Show 28</summary>
+<summary>Show 31</summary>
 
 - `files:.github/CODEOWNERS`
 
@@ -138,6 +138,12 @@ in
 
 - `packages:rompatcher-js/tests/help`
 
+- `packages:slk/build`
+
+- `packages:slk/metadata`
+
+- `packages:slk/tests/version`
+
 - `packages:snekcheck/build`
 
 - `packages:snekcheck/metadata`
@@ -160,7 +166,7 @@ in
 ### `legacyPackages`
 
 <details>
-<summary>Show 5</summary>
+<summary>Show 6</summary>
 
 - `baseos` - Bootable BaseOS image for the Anbernic rgsp
 
@@ -169,6 +175,8 @@ in
 - `nextui-h700` - NextUI frontend card contents for Anbernic H700 handhelds
 
 - `rompatcher-js` - Browser and CLI ROM patching tool
+
+- `slk` - A blazingly fast Slack TUI
 
 - `snekcheck` - An opinionated filename linter that loves snake case
 
