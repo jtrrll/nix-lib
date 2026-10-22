@@ -10,6 +10,7 @@
               containers = lib.mkForce { }; # Workaround to remove containers from flake checks.
               overlays = [ config.flake.overlays.default ];
             }
+            config.flake.modules.devenv.default
           ];
           shells.default = _: {
             enterShell = ''printf "\033[0;1;36mDEVSHELL ACTIVATED\033[0m\n"'';
