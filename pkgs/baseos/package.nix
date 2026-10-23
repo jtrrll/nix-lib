@@ -12,48 +12,48 @@
 let
   hashes = {
     rg28xx = {
-      image = "sha256-QqTHaRsBWxRnEx8r0Fd7XkwOxwgKe3gdF2i7lDq6UZQ=";
-      update = "sha256-AefPxOCzk7lnCStWTB2ZzqMrn98FxiBIYw4m5qbABF0=";
+      image = "sha256-yclEkHnhaGN2D9JGP8gGbcBEnttPItnHy1ohD8kONHE=";
+      update = "sha256-e3GdrBDhnIkvVtZClkZiZVZ0rO3Oanbb30c8iHUm/yg=";
     };
     rg34xx = {
-      image = "sha256-np71OsGpLsYnGv24r6TZ4SYJRazfVPJ/5UERIYh0Wy4=";
-      update = "sha256-32pH12EzskOUbnUYnaMTuY1b4COHDLJL6VCENWLqHEc=";
+      image = "sha256-0RT3oOQVwTlup8LQknxJYTvOPJH28q58kTpF37QGBao=";
+      update = "sha256-4169QE7D4vdvpcgDAuS1o0ZzxI3czeZyHQXDmRPcwA4=";
     };
     rg34xxsp = {
-      image = "sha256-Ey1DThsrcc+EPlI9DA5ACTQhuQZtPV0qXFhW+3Lsel4=";
-      update = "sha256-RifLHOImTPl/y+Ik6EA1169N7hC6fbK8mJGY1wI0PNY=";
+      image = "sha256-tJaDTch3NXcdYlCEF+psbg39gRwwZiZK1zJ/PEUytEY=";
+      update = "sha256-QAaup9VZXCGyIE+Aqezw4mwpAS9dBpcafsfu2Q0ISS4=";
     };
     rg35xxh = {
-      image = "sha256-iDePG0BzikI0Jtc+DZ3cZ2en95NqLqMCZGxYuTIrko8=";
-      update = "sha256-8B7anZxwAfYbH4mRLn5KVHkaxzW+uBCwwi9e7cI5zzM=";
+      image = "sha256-E78vRCGe5JRz5/5e8Qs+/FIQ6rkXALvBLgYUU6JThSI=";
+      update = "sha256-Vv1NZN5r0GyBWWgGg5aFbVkJETZ5AVMOFLj1QYBZ/kc=";
     };
     rg35xxplus = {
-      image = "sha256-e68/a6DGwW0yeV1jo24tSv3udz4ANEXqib8/cvgSTEY=";
-      update = "sha256-WJVd4WP701aS9yfLD/8Hb24uab+QnLtu/1JZ2pv9BTM=";
+      image = "sha256-YApLWCATbcLdFWvvzBQuJYuI8azNl7jXrumOLVYVDO4=";
+      update = "sha256-NgsrHBGuq0OemuWS3ITug++BaoIL8BmFjNd7fewOjJ0=";
     };
     rg35xxpro = {
-      image = "sha256-XEGGYaPRlCt2fSbr65fA5HMEsHaFsQdqAlOYIHaBjEs=";
-      update = "sha256-Z5RgVWLQlAT/L1+lrMQty16LuDx34EdZN222YbzySxk=";
+      image = "sha256-mdZXZ8qPJxfV1zAnAFLmQYXOL/mtnYlND33h/nyVQOE=";
+      update = "sha256-cWoKS/ocINASYnIETNJmDaNMAxymytnZxr0lPSDMCJM=";
     };
     rg35xxsp = {
-      image = "sha256-Jj4v1uffHRd/PeTXmst1x7IixK0Xx47Cz4WOh/DIlzg=";
-      update = "sha256-ut3H/hCCz3/eGBaK4MrRdVNh+YR9MUqCUSOHc9JElOA=";
+      image = "sha256-DZPt/5OMHKKRvwsMWigfoICmYOTQ+33D73iMJyS3Ym0=";
+      update = "sha256-QVxaRqftaqli+S40y+fxUhLYiwlor5jJuDJvn1ND1do=";
     };
     rg40xxh = {
-      image = "sha256-SKfeCYxXwjj8YB7gT/KdvqBDqHUD3DGOxHk9Ja+H5XM=";
-      update = "sha256-lrNmVA5Ne7TOmVmFbgwOVxNNB4JgppWpgMK0wAW85+Q=";
+      image = "sha256-9Pugrwbf9mRA8B59ynwKe1UfXLBuY6xrTjUWoy07Q+8=";
+      update = "sha256-PaURWM6zD26ZVLGO89GzzbL8Om9ryK2Qbffxj1S8n5Q=";
     };
     rg40xxv = {
-      image = "sha256-mJWAn5hhJDzK9/G95uDixARJmMzpHzO+BCLCpGDpjog=";
-      update = "sha256-YgFfCWXN1/4lDVo91W0kt4OAsQy6uuACyAYbG8JNBvY=";
+      image = "sha256-whaL225ge+zwAWj8YOlVYUfjDVM4uzv+QKGv7QkFjPI=";
+      update = "sha256-P06U43+u5S8YSKXcg2yTCGyiKtNPYRIv0mkmBBfgnZo=";
     };
     rgcubexx = {
-      image = "sha256-NUcG8StV3OcJgtJQyikOg5a46AzJBNv5lMssW24aCNY=";
-      update = "sha256-u+9cYLokqmXPZ3hL7ilynKWeCG4fSJ+jwc5azlQ5zC8=";
+      image = "sha256-Q7furv5kmS1JLUqROmR4rkOUUiI1JRsG1Tdv1tdCGtU=";
+      update = "sha256-6QLgTK5d56nRF3uAVZbzXMtYKSCgFWVsgtfNiK5zT/M=";
     };
     rgsp = {
-      image = "sha256-ObGEhnxmKKOdCxl9cLBsB+t0/tLz1UobJ+NyusVi3xI=";
-      update = "sha256-JbfbEFk3Hh5DEXUM2yWVqGL8k7MPEt6EZHR75IZ4SvA=";
+      image = "sha256-/L4uDTlLq9OyTzXpaFul4gbBRYNGL1BkpVs7NaXb/iQ=";
+      update = "sha256-fk6epXtsUrtSvWJxlgFyY+YHJpGlTGbkQOhfrwPxprE=";
     };
   };
   supportedDevices = builtins.attrNames hashes;
@@ -77,7 +77,7 @@ stdenvNoCC.mkDerivation (
   in
   {
     pname = "baseos-${device}";
-    version = "1.3.0";
+    version = "1.4.0";
 
     src = fetchurl {
       url = "${releaseUrl}.img.zip";
