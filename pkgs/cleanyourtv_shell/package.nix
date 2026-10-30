@@ -6,6 +6,7 @@
   lib,
   mkShell,
   python3,
+  runCommand,
   writableTmpDirAsHomeHook,
 }:
 let
@@ -104,6 +105,13 @@ mkShell {
     tools/venv/bin/python -m unittest discover -s tests
 
     runHook postCheck
+  '';
+
+  # Free inputs only, so nix-lib's checks run it although they never build the shell itself.
+  passthru.tests.requirements = runCommand "test-cleanyourtv-shell-requirements" { } ''
+    PYTHONPATH=${python3.pkgs.packaging}/${python3.sitePackages} \
+      ${python.interpreter} ${./check_requirements.py} ${upstreamSrc}/tools/requirements.txt
+    touch $out
   '';
 
   meta = {

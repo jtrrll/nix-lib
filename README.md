@@ -86,7 +86,7 @@ in
 ### `checks`
 
 <details>
-<summary>Show 32</summary>
+<summary>Show 33</summary>
 
 - `files:.github/CODEOWNERS`
 
@@ -123,6 +123,8 @@ in
 - `packages:baseos/metadata`
 
 - `packages:cleanyourtv-shell/metadata`
+
+- `packages:cleanyourtv-shell/tests/requirements`
 
 - `packages:grout/build`
 
