@@ -86,7 +86,7 @@ in
 ### `checks`
 
 <details>
-<summary>Show 31</summary>
+<summary>Show 32</summary>
 
 - `files:.github/CODEOWNERS`
 
@@ -121,6 +121,8 @@ in
 - `lib`
 
 - `packages:baseos/metadata`
+
+- `packages:cleanyourtv-shell/metadata`
 
 - `packages:grout/build`
 
@@ -166,9 +168,11 @@ in
 ### `legacyPackages`
 
 <details>
-<summary>Show 6</summary>
+<summary>Show 7</summary>
 
 - `baseos` - Bootable BaseOS image for the Anbernic rgsp
+
+- `cleanyourtv-shell` - Shell with ADB, Python, JDK 17 and the Android SDK for following cleanyourtv's PROMPT.md
 
 - `grout` - RomM client for Linux retro handhelds
 
