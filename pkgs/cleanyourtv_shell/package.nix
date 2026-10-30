@@ -112,6 +112,6 @@ mkShell {
     license = lib.licenses.unfree;
     maintainers = [ lib.maintainers.jtrrll ];
     platforms = lib.platforms.darwin ++ [ "x86_64-linux" ];
-    sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
+    sourceProvenance = [ lib.sourceTypes.fromSource ];
   };
 }
