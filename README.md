@@ -86,7 +86,7 @@ in
 ### `checks`
 
 <details>
-<summary>Show 28</summary>
+<summary>Show 33</summary>
 
 - `files:.github/CODEOWNERS`
 
@@ -122,6 +122,10 @@ in
 
 - `packages:baseos/metadata`
 
+- `packages:cleanyourtv-shell/metadata`
+
+- `packages:cleanyourtv-shell/tests/requirements`
+
 - `packages:grout/build`
 
 - `packages:grout/metadata`
@@ -137,6 +141,12 @@ in
 - `packages:rompatcher-js/metadata`
 
 - `packages:rompatcher-js/tests/help`
+
+- `packages:slk/build`
+
+- `packages:slk/metadata`
+
+- `packages:slk/tests/version`
 
 - `packages:snekcheck/build`
 
@@ -160,15 +170,19 @@ in
 ### `legacyPackages`
 
 <details>
-<summary>Show 5</summary>
+<summary>Show 7</summary>
 
 - `baseos` - Bootable BaseOS image for the Anbernic rgsp
+
+- `cleanyourtv-shell` - Shell with ADB, Python, JDK 17 and the Android SDK for following cleanyourtv's PROMPT.md
 
 - `grout` - RomM client for Linux retro handhelds
 
 - `nextui-h700` - NextUI frontend card contents for Anbernic H700 handhelds
 
 - `rompatcher-js` - Browser and CLI ROM patching tool
+
+- `slk` - A blazingly fast Slack TUI
 
 - `snekcheck` - An opinionated filename linter that loves snake case
 
