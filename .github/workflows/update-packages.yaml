@@ -27,3 +27,4 @@ jobs:
           commit-message: 'deps(packages): update package dependencies'
           labels: automated,dependencies
           title: 'deps(packages): update package dependencies'
+          token: ${{ secrets.UPDATE_PACKAGES_TOKEN }}
