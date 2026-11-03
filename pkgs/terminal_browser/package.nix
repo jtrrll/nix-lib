@@ -128,7 +128,11 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   passthru = {
     updateScript = nix-update-script {
       attrPath = "legacyPackages.${stdenvNoCC.hostPlatform.system}.terminal-browser";
-      extraArgs = [ "--flake" ];
+      extraArgs = [
+        "--flake"
+        "--version-regex"
+        "^v(\\d+\\.\\d+\\.\\d+)$"
+      ];
     };
     tests.version = testers.testVersion {
       package = finalAttrs.finalPackage;
