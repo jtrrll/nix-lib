@@ -86,7 +86,7 @@ in
 ### `checks`
 
 <details>
-<summary>Show 33</summary>
+<summary>Show 36</summary>
 
 - `files:.github/CODEOWNERS`
 
@@ -152,6 +152,12 @@ in
 
 - `packages:snekcheck/metadata`
 
+- `packages:terminal-browser/build`
+
+- `packages:terminal-browser/metadata`
+
+- `packages:terminal-browser/tests/version`
+
 - `treefmt`
 
 </details>
@@ -170,7 +176,7 @@ in
 ### `legacyPackages`
 
 <details>
-<summary>Show 7</summary>
+<summary>Show 8</summary>
 
 - `baseos` - Bootable BaseOS image for the Anbernic rgsp
 
@@ -185,6 +191,8 @@ in
 - `slk` - A blazingly fast Slack TUI
 
 - `snekcheck` - An opinionated filename linter that loves snake case
+
+- `terminal-browser` - Real browser that runs inside your terminal
 
 </details>
 

@@ -56,7 +56,7 @@ let
       update = "sha256-JbfbEFk3Hh5DEXUM2yWVqGL8k7MPEt6EZHR75IZ4SvA=";
     };
   };
-  supportedDevices = builtins.attrNames hashes;
+  supportedDevices = lib.attrNames hashes;
   deviceHashes =
     hashes.${device}
       or (throw "Unsupported BaseOS device '${device}'; supported devices: ${lib.concatStringsSep ", " supportedDevices}");
