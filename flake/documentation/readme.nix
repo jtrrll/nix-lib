@@ -1,166 +1,55 @@
-{ config, ... }:
 {
   config.perSystem =
-    let
-      inherit (config.flake) nixosModules;
-      inherit (config) processedFlake;
-    in
     {
       lib,
       pkgs,
-      system,
       ...
     }:
     let
-      renderValue =
-        v:
-        if v ? _type && v._type == "literalExpression" then
-          v.text
-        else if v ? _type && v._type == "literalMD" then
-          v.text
-        else
-          lib.generators.toJSON { } v;
-      renderOption =
-        opt:
-        let
-          inherit (opt) name;
-          default = if opt ? default then renderValue opt.default else null;
-          rawDesc = opt.description or null;
-          firstLine = if rawDesc == null then null else lib.head (lib.splitString "\n" (lib.trim rawDesc));
-          details = lib.concatStrings [
-            (lib.optionalString (firstLine != null) " - ${firstLine}")
-            (lib.optionalString (opt ? type && opt.type ? description) " (`${opt.type.description}`)")
-            (lib.optionalString (default != null) " (default: `${default}`)")
-          ];
-        in
-        "  - `${name}`${details}";
-      filterOpts =
-        excludePrefixes:
-        lib.filter (opt: !(lib.any (prefix: lib.hasPrefix prefix opt.name) excludePrefixes));
-      optionsForModules =
-        {
-          modules,
-          excludePrefixes,
-          evalModules ? lib.evalModules,
-        }:
-        let
-          eval = evalModules { inherit modules; };
-        in
-        filterOpts excludePrefixes (lib.optionAttrSetToDocList eval.options);
-      renderModuleOptions =
-        opts: if opts == [ ] then "" else lib.concatStringsSep "\n" (map renderOption opts);
-      nixosModuleOptions =
-        moduleName:
-        optionsForModules {
-          modules = [
-            nixosModules.${moduleName}
-            {
-              config._module = {
-                args.pkgs = pkgs.extend config.flake.overlays.default;
-                check = false;
-              };
-            }
-          ];
-          excludePrefixes = [
-            "_module"
-          ];
-        };
-      outputsMarkdown =
-        let
-          isPerSystem =
-            name:
-            let
-              val = processedFlake.${name};
-            in
-            lib.isAttrs val && val ? ${system};
-          outputNames = lib.pipe (lib.attrNames processedFlake) [
-            (lib.sort lib.lessThan)
-          ];
-          describedOutputs = [
-            "apps"
-            "legacyPackages"
-          ];
-          # `legacyPackages` is all of nixpkgs plus our overlay; only surface the
-          # packages our overlay actually introduces.
-          overlayPackageNames =
-            let
-              legacy = pkgs.extend config.flake.overlays.default;
-              added = lib.filterAttrs (_: lib.isDerivation) (config.flake.overlays.default legacy pkgs);
-            in
-            lib.attrNames added;
-          attrNamesFor =
-            name:
-            let
-              val = processedFlake.${name};
-            in
-            if name == "legacyPackages" then
-              overlayPackageNames
-            else if isPerSystem name then
-              let
-                perSysVal = val.${system};
-                tried = lib.tryEval (
-                  if lib.isDerivation perSysVal then
-                    [ ]
-                  else if lib.isAttrs perSysVal then
-                    lib.attrNames perSysVal
-                  else
-                    [ ]
-                );
-              in
-              if tried.success then tried.value else [ ]
-            else if lib.isAttrs val then
-              let
-                tried = lib.tryEval (lib.attrNames val);
-              in
-              if tried.success then tried.value else [ ]
-            else
-              [ ];
-          formatAttr =
-            outputName: attrName:
-            let
-              optionsMd =
-                if outputName == "nixosModules" then renderModuleOptions (nixosModuleOptions attrName) else "";
-              description =
-                if lib.elem outputName describedOutputs then
-                  let
-                    val =
-                      if isPerSystem outputName then
-                        processedFlake.${outputName}.${system}.${attrName}
-                      else
-                        processedFlake.${outputName}.${attrName};
-                  in
-                  if lib.isDerivation val then
-                    val.meta.description or null
-                  else if lib.isAttrs val && val ? config.meta.description then
-                    val.config.meta.description
-                  else if lib.isAttrs val && val ? meta && lib.isAttrs val.meta then
-                    val.meta.description or null
-                  else
-                    null
-                else
-                  null;
-              descSuffix = lib.optionalString (description != null) " - ${description}";
-            in
-            if optionsMd == "" then
-              "- `${attrName}`${descSuffix}"
-            else
-              "- `${attrName}`${descSuffix}\n${optionsMd}";
-          formatSection =
-            name:
-            let
-              attrs = lib.sort lib.lessThan (attrNamesFor name);
-            in
-            if attrs == [ ] then
-              "### `${name}`"
-            else
-              lib.concatStrings [
-                "### `${name}`\n\n"
-                "<details>\n<summary>Show ${toString (lib.length attrs)}</summary>\n\n"
-                "${lib.concatStringsSep "\n\n" (map (formatAttr name) attrs)}\n\n"
-                "</details>"
-              ];
-        in
-        lib.concatStringsSep "\n\n" (map formatSection outputNames);
+      nixLib = import ../.. { inherit lib; };
+
+      renderSection =
+        name: items:
+        lib.concatStrings [
+          "### `${name}`\n\n"
+          "<details>\n<summary>Show ${toString (lib.length items)}</summary>\n\n"
+          "${lib.concatStringsSep "\n\n" items}\n\n"
+          "</details>"
+        ];
+      renderEntry =
+        name: children:
+        lib.concatStringsSep "\n" ([ "- `${name}`" ] ++ map (child: "  - ${child}") children);
+
+      modulesMarkdown = renderSection "modules" (
+        lib.mapAttrsToList (
+          class: modules: renderEntry class (map (name: "`${name}`") (lib.attrNames modules))
+        ) nixLib.modules
+      );
+
+      overlayContents = {
+        lib =
+          let
+            extended = lib.extend nixLib.overlays.lib;
+          in
+          map (name: "`${name}`") (lib.attrNames (nixLib.overlays.lib extended lib));
+        pkgs =
+          let
+            extended = pkgs.extend nixLib.overlays.pkgs;
+            packages = lib.filterAttrs (_: lib.isDerivation) (nixLib.overlays.pkgs extended pkgs);
+          in
+          lib.mapAttrsToList (
+            name: package:
+            "`${name}`${lib.optionalString (package.meta ? description) " - ${package.meta.description}"}"
+          ) packages;
+      };
+      overlaysMarkdown = renderSection "overlays" (
+        lib.mapAttrsToList renderEntry (lib.getAttrs (lib.attrNames nixLib.overlays) overlayContents)
+      );
+
+      outputsMarkdown = lib.concatStringsSep "\n\n" [
+        modulesMarkdown
+        overlaysMarkdown
+      ];
     in
     {
       config = {
