@@ -89,6 +89,10 @@
                   echo "count=$(wc -l < "$built_outputs")" >> "$GITHUB_OUTPUT"
                   [ -s "$built_outputs" ] || exit 0
 
+                  # The Nix daemon creates the cache directory as root when it first queries the substituter.
+                  mkdir -p "$CACHE_DIR"
+                  sudo chown -R "$(id -u):$(id -g)" "$CACHE_DIR"
+
                   xargs nix copy --to "file://$CACHE_DIR?compression=none" < "$built_outputs"
 
                   cd "$CACHE_DIR" || exit 1
