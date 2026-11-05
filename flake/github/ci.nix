@@ -36,6 +36,7 @@
           primary-key = "nix-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}";
           restore-prefixes-first-match = "nix-\${{ runner.os }}-";
           gc-max-store-size-linux = "5G";
+          save = "\${{ github.ref_name == github.event.repository.default_branch }}";
         };
       };
 
