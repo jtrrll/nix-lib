@@ -70,142 +70,61 @@ in
 
 ## Outputs
 
-### `apps`
+### `modules`
 
 <details>
-<summary>Show 3</summary>
+<summary>Show 5</summary>
 
-- `github-tf` - Manages GitHub repository with OpenTofu
+- `devenv`
+  - `default`
+  - `respect-shell`
 
-- `update-packages` - Runs each package's own updateScript
+- `flake`
+  - `default`
+  - `flake-metadata`
+  - `home-configuration-build-checks`
+  - `nixos-configuration-build-checks`
+  - `nixos-configuration-test-checks`
+  - `package-build-checks`
+  - `package-metadata-checks`
+  - `package-passthru-tests-checks`
+  - `packages-by-name`
 
-- `write-files` - Write all configured files to their paths
+- `homeManager`
+  - `default`
+  - `meta`
+  - `snekcheck`
 
-</details>
-
-### `checks`
-
-<details>
-<summary>Show 38</summary>
-
-- `files:.github/CODEOWNERS`
-
-- `files:.github/CODE_OF_CONDUCT.md`
-
-- `files:.github/CONTRIBUTING.md`
-
-- `files:.github/ISSUE_TEMPLATE/bug_report.yaml`
-
-- `files:.github/ISSUE_TEMPLATE/config.yaml`
-
-- `files:.github/ISSUE_TEMPLATE/documentation_issue.yaml`
-
-- `files:.github/ISSUE_TEMPLATE/feature_request.yaml`
-
-- `files:.github/PULL_REQUEST_TEMPLATE.md`
-
-- `files:.github/actions/nix-binary-cache/restore/action.yml`
-
-- `files:.github/actions/nix-binary-cache/save/action.yml`
-
-- `files:.github/dependabot.yaml`
-
-- `files:.github/workflows/ci.yaml`
-
-- `files:.github/workflows/update-packages.yaml`
-
-- `files:LICENSE`
-
-- `files:README.md`
-
-- `grout-nextui-pak/build`
-
-- `grout-rocknix-pak/build`
-
-- `lib`
-
-- `packages:baseos/metadata`
-
-- `packages:cleanyourtv-shell/metadata`
-
-- `packages:cleanyourtv-shell/tests/requirements`
-
-- `packages:grout/build`
-
-- `packages:grout/metadata`
-
-- `packages:grout/tests/romm-version`
-
-- `packages:nextui-h700/build`
-
-- `packages:nextui-h700/metadata`
-
-- `packages:rompatcher-js/build`
-
-- `packages:rompatcher-js/metadata`
-
-- `packages:rompatcher-js/tests/help`
-
-- `packages:slk/build`
-
-- `packages:slk/metadata`
-
-- `packages:slk/tests/version`
-
-- `packages:snekcheck/build`
-
-- `packages:snekcheck/metadata`
-
-- `packages:terminal-browser/build`
-
-- `packages:terminal-browser/metadata`
-
-- `packages:terminal-browser/tests/version`
+- `nixos`
+  - `default`
+  - `meta`
+  - `tests`
 
 - `treefmt`
-
-</details>
-
-### `devShells`
-
-<details>
-<summary>Show 1</summary>
-
-- `default`
-
-</details>
-
-### `formatter`
-
-### `legacyPackages`
-
-<details>
-<summary>Show 8</summary>
-
-- `baseos` - Bootable BaseOS image for the Anbernic rgsp
-
-- `cleanyourtv-shell` - Shell with ADB, Python, JDK 17 and the Android SDK for following cleanyourtv's PROMPT.md
-
-- `grout` - RomM client for Linux retro handhelds
-
-- `nextui-h700` - NextUI frontend card contents for Anbernic H700 handhelds
-
-- `rompatcher-js` - Browser and CLI ROM patching tool
-
-- `slk` - A blazingly fast Slack TUI
-
-- `snekcheck` - An opinionated filename linter that loves snake case
-
-- `terminal-browser` - Real browser that runs inside your terminal
+  - `default`
+  - `nix`
 
 </details>
 
 ### `overlays`
 
 <details>
-<summary>Show 1</summary>
+<summary>Show 2</summary>
 
-- `default`
+- `lib`
+  - `maintainers`
+  - `modules`
+  - `strings`
+
+- `pkgs`
+  - `baseos` - Bootable BaseOS image for the Anbernic rgsp
+  - `cleanyourtv-shell` - Shell with ADB, Python, JDK 17 and the Android SDK for following cleanyourtv's PROMPT.md
+  - `grout` - RomM client for Linux retro handhelds
+  - `nextui-h700` - NextUI frontend card contents for Anbernic H700 handhelds
+  - `rompatcher-js` - Browser and CLI ROM patching tool
+  - `slk` - A blazingly fast Slack TUI
+  - `snekcheck` - An opinionated filename linter that loves snake case
+  - `terminal-browser` - Real browser that runs inside your terminal
 
 </details>
 
