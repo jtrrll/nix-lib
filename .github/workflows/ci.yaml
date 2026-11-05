@@ -25,6 +25,15 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v22
         with:
           extra-conf: "allow-import-from-derivation = false\nextra-substituters = https://devenv.cachix.org https://nix-community.cachix.org\nextra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      - id: nixpkgs
+        name: Read nixpkgs pin
+        run: echo "rev=$(jq -r '.nodes[.nodes.root.inputs.nixpkgs].locked.rev' flake.lock)" >> "$GITHUB_OUTPUT"
+      - name: Cache Nix store
+        uses: nix-community/cache-nix-action@v7
+        with:
+          gc-max-store-size-linux: 5G
+          primary-key: nix-${{ runner.os }}-${{ steps.nixpkgs.outputs.rev }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
       - uses: DeterminateSystems/flake-checker-action@v13
       - name: Check flake
         env:

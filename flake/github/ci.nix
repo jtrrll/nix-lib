@@ -23,6 +23,22 @@
         uses = "actions/checkout@v7";
       };
 
+      nixpkgsRevStep = {
+        id = "nixpkgs";
+        name = "Read nixpkgs pin";
+        run = "echo \"rev=$(jq -r '.nodes[.nodes.root.inputs.nixpkgs].locked.rev' flake.lock)\" >> \"$GITHUB_OUTPUT\"";
+      };
+
+      cacheNixStoreStep = {
+        name = "Cache Nix store";
+        uses = "nix-community/cache-nix-action@v7";
+        "with" = {
+          primary-key = "nix-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}";
+          restore-prefixes-first-match = "nix-\${{ runner.os }}-";
+          gc-max-store-size-linux = "5G";
+        };
+      };
+
       uploadEvalStatsStep = artifactName: {
         name = "Upload Nix evaluation statistics";
         uses = "actions/upload-artifact@v7";
@@ -57,6 +73,8 @@
             steps = [
               checkoutStep
               nixInstallerStep
+              nixpkgsRevStep
+              cacheNixStoreStep
               { uses = "DeterminateSystems/flake-checker-action@v13"; }
               {
                 name = "Check flake";
@@ -76,7 +94,7 @@
             yq '
               pick(["name", "on", "concurrency", "env", "jobs"]) |
               .jobs[] |= pick(["name", "strategy", "runs-on", "steps"]) |
-              .jobs[].steps[] |= pick(["name", "if", "uses", "with", "env", "run"])
+              .jobs[].steps[] |= pick(["id", "name", "if", "uses", "with", "env", "run"])
             ' ${generated} > $out
           '';
     };
