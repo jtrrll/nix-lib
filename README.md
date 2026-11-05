@@ -86,7 +86,7 @@ in
 ### `checks`
 
 <details>
-<summary>Show 33</summary>
+<summary>Show 36</summary>
 
 - `files:.github/CODEOWNERS`
 
@@ -122,25 +122,19 @@ in
 
 - `packages:baseos/metadata`
 
+- `packages:cleanyourtv-shell/metadata`
+
+- `packages:cleanyourtv-shell/tests/requirements`
+
 - `packages:grout/build`
 
 - `packages:grout/metadata`
 
-- `packages:grout/romm-version`
+- `packages:grout/tests/romm-version`
 
 - `packages:nextui-h700/build`
 
 - `packages:nextui-h700/metadata`
-
-- `packages:rahasher/build`
-
-- `packages:rahasher/metadata`
-
-- `packages:romm/build`
-
-- `packages:romm/metadata`
-
-- `packages:romm/tests/rom-patcher`
 
 - `packages:rompatcher-js/build`
 
@@ -148,9 +142,21 @@ in
 
 - `packages:rompatcher-js/tests/help`
 
+- `packages:slk/build`
+
+- `packages:slk/metadata`
+
+- `packages:slk/tests/version`
+
 - `packages:snekcheck/build`
 
 - `packages:snekcheck/metadata`
+
+- `packages:terminal-browser/build`
+
+- `packages:terminal-browser/metadata`
+
+- `packages:terminal-browser/tests/version`
 
 - `treefmt`
 
@@ -170,21 +176,23 @@ in
 ### `legacyPackages`
 
 <details>
-<summary>Show 7</summary>
+<summary>Show 8</summary>
 
 - `baseos` - Bootable BaseOS image for the Anbernic rgsp
+
+- `cleanyourtv-shell` - Shell with ADB, Python, JDK 17 and the Android SDK for following cleanyourtv's PROMPT.md
 
 - `grout` - RomM client for Linux retro handhelds
 
 - `nextui-h700` - NextUI frontend card contents for Anbernic H700 handhelds
 
-- `rahasher` - Hashing tool from RALibretro used by RomM for RetroAchievements
-
-- `romm` - Self-hosted ROM manager and player
-
 - `rompatcher-js` - Browser and CLI ROM patching tool
 
+- `slk` - A blazingly fast Slack TUI
+
 - `snekcheck` - An opinionated filename linter that loves snake case
+
+- `terminal-browser` - Real browser that runs inside your terminal
 
 </details>
 

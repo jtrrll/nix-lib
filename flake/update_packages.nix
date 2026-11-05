@@ -1,16 +1,21 @@
+{ config, ... }:
+let
+  overlay = config.flake.overlays.default;
+in
 {
   config.perSystem =
     {
-      config,
       lib,
       pkgs,
       ...
     }:
     let
+      overlayPackages = lib.filterAttrs (_: lib.isDerivation) (overlay (pkgs.extend overlay) pkgs);
+
       # Packages that manage their own dependencies (e.g. Go modules, Cargo
       # crates, or an upstream release tracked via nix-update) instead of
       # relying on dependabot.
-      updatable = lib.filterAttrs (_: pkg: (pkg.passthru or { }) ? updateScript) config.packages;
+      updatable = lib.filterAttrs (_: pkg: (pkg.passthru or { }) ? updateScript) overlayPackages;
 
       # `updateScript` is either a self-contained derivation (as produced by
       # `writeShellApplication`) or a list of strings `[ executable arg... ]`

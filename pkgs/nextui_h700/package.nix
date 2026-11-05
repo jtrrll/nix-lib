@@ -10,7 +10,7 @@
 }:
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "nextui-h700";
-  version = "6.14.0-rc10";
+  version = "6.14.0-rc11";
 
   src =
     let
@@ -19,7 +19,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     in
     fetchurl {
       url = "https://github.com/pvaibhav/NextUI/releases/download/${releaseTag}/NextUI-v${lib.head versionParts}-${releaseTag}.zip";
-      hash = "sha256-mrF5J+y1euX+KR/V6NDvFdPBNkfYJBqVVwhbcvmiU5U=";
+      hash = "sha256-6JuwqTmrPlKBRPhDpCSPimQiZNhxQjfvXYxoSYIM0i0=";
     };
 
   nativeBuildInputs = [ unzip ];

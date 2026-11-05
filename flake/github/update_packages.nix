@@ -45,6 +45,9 @@
               name = "Open pull request";
               uses = "peter-evans/create-pull-request@v8";
               "with" = {
+                # A PAT is required so the PR triggers CI; PRs opened with
+                # GITHUB_TOKEN do not, and "Check" is a required status.
+                token = "\${{ secrets.UPDATE_PACKAGES_TOKEN }}";
                 commit-message = "deps(packages): update package dependencies";
                 title = "deps(packages): update package dependencies";
                 body = "Automated update of package dependencies via each package's `passthru.updateScript`.";

@@ -1,12 +1,13 @@
 {
   lib,
+  stdenv,
   buildGoModule,
   fetchFromGitHub,
   nix-update-script,
 }:
 buildGoModule (finalAttrs: {
   pname = "snekcheck";
-  version = "0.1.0";
+  version = "0.1.0-unstable-2025-11-25";
 
   src = fetchFromGitHub {
     owner = "jtrrll";
@@ -20,7 +21,7 @@ buildGoModule (finalAttrs: {
   subPackages = [ "cmd/snekcheck" ];
 
   passthru.updateScript = nix-update-script {
-    attrPath = "snekcheck";
+    attrPath = "legacyPackages.${stdenv.hostPlatform.system}.snekcheck";
     extraArgs = [
       "--flake"
       "--version=branch"

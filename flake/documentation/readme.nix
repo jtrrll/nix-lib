@@ -98,7 +98,7 @@
             else if isPerSystem name then
               let
                 perSysVal = val.${system};
-                tried = builtins.tryEval (
+                tried = lib.tryEval (
                   if lib.isDerivation perSysVal then
                     [ ]
                   else if lib.isAttrs perSysVal then
@@ -110,7 +110,7 @@
               if tried.success then tried.value else [ ]
             else if lib.isAttrs val then
               let
-                tried = builtins.tryEval (lib.attrNames val);
+                tried = lib.tryEval (lib.attrNames val);
               in
               if tried.success then tried.value else [ ]
             else

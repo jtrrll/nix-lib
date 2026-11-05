@@ -6,6 +6,7 @@
   nix-update-script,
   nodejs_24,
   runCommand,
+  stdenv,
 }:
 buildNpmPackage (finalAttrs: {
   pname = "rompatcher-js";
@@ -86,7 +87,10 @@ buildNpmPackage (finalAttrs: {
   '';
 
   passthru = {
-    updateScript = nix-update-script { };
+    updateScript = nix-update-script {
+      attrPath = "legacyPackages.${stdenv.hostPlatform.system}.rompatcher-js";
+      extraArgs = [ "--flake" ];
+    };
     tests.help = runCommand "test-rompatcher-js-help" { } ''
       ${lib.getExe finalAttrs.finalPackage} --help | grep -F "Usage: rompatcher-js"
       touch $out

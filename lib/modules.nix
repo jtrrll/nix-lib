@@ -25,7 +25,7 @@ let
           [ entry ]
         else
           [ ]
-      ) (builtins.readDir path)
+      ) (lib.readDir path)
     );
 in
 {
@@ -69,10 +69,10 @@ in
             }
             // result.module;
           }
-        ) (builtins.readDir (path + "/${className}"));
+        ) (lib.readDir (path + "/${className}"));
     in
     lib.pipe path [
-      (p: if builtins.pathExists p then builtins.readDir p else { })
+      (p: if lib.pathExists p then lib.readDir p else { })
       (lib.filterAttrs (_: kind: kind == "directory"))
       lib.attrNames
       (lib.concatMap entriesForClass)

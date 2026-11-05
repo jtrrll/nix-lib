@@ -21,11 +21,14 @@ def replace_once(source: str, pattern: str, replacement: str) -> str:
 
 
 def main(path: Path) -> None:
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    curl_args = ["curl", "-fsSL"]
+    if token:
+        curl_args += ["-H", f"Authorization: Bearer {token}"]
     releases = json.loads(
         subprocess.run(
             [
-                "curl",
-                "-fsSL",
+                *curl_args,
                 "https://api.github.com/repos/pvaibhav/NextUI/releases?per_page=100",
             ],
             check=True,
