@@ -1,0 +1,26 @@
+%YAML 1.1
+---
+name: Restore Nix binary cache
+description: Restores a file-based Nix binary cache keyed on the nixpkgs pin in flake.lock
+inputs:
+  path:
+    description: Directory holding the binary cache
+    required: true
+outputs:
+  key:
+    description: Key to save the updated binary cache under
+    value: ${{ steps.restore.outputs.cache-primary-key }}
+runs:
+  steps:
+    - id: nixpkgs
+      name: Read nixpkgs pin
+      shell: bash
+      run: echo "rev=$(jq -r '.nodes[.nodes.root.inputs.nixpkgs].locked.rev' flake.lock)" >> "$GITHUB_OUTPUT"
+    - id: restore
+      name: Restore binary cache
+      uses: actions/cache/restore@v6
+      with:
+        key: nix-binary-cache-${{ runner.os }}-${{ steps.nixpkgs.outputs.rev }}-${{ github.run_id }}
+        path: ${{ inputs.path }}
+        restore-keys: nix-binary-cache-${{ runner.os }}-${{ steps.nixpkgs.outputs.rev }}-
+  using: composite

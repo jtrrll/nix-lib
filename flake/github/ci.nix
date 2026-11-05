@@ -8,9 +8,12 @@
     let
       yaml = pkgs.formats.yaml { };
 
+      binaryCacheDir = "/tmp/nix-binary-cache";
+      buildResultsFile = "nix_fast_build_results.jsonl";
+
       nixInstallerConf = lib.concatStringsSep "\n" [
         "allow-import-from-derivation = false"
-        "extra-substituters = https://devenv.cachix.org https://nix-community.cachix.org"
+        "extra-substituters = https://devenv.cachix.org https://nix-community.cachix.org file://${binaryCacheDir}?trusted=1"
         "extra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       ];
 
@@ -23,20 +26,21 @@
         uses = "actions/checkout@v7";
       };
 
-      nixpkgsRevStep = {
-        id = "nixpkgs";
-        name = "Read nixpkgs pin";
-        run = "echo \"rev=$(jq -r '.nodes[.nodes.root.inputs.nixpkgs].locked.rev' flake.lock)\" >> \"$GITHUB_OUTPUT\"";
+      restoreBinaryCacheStep = {
+        id = "binary-cache";
+        name = "Restore binary cache";
+        uses = "./.github/actions/nix-binary-cache/restore";
+        "with".path = binaryCacheDir;
       };
 
-      cacheNixStoreStep = {
-        name = "Cache Nix store";
-        uses = "nix-community/cache-nix-action@v7";
+      saveBinaryCacheStep = {
+        name = "Save binary cache";
+        "if" = "github.ref_name == github.event.repository.default_branch";
+        uses = "./.github/actions/nix-binary-cache/save";
         "with" = {
-          primary-key = "nix-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}";
-          restore-prefixes-first-match = "nix-\${{ runner.os }}-";
-          gc-max-store-size-linux = "5G";
-          save = "\${{ github.ref_name == github.event.repository.default_branch }}";
+          path = binaryCacheDir;
+          key = "\${{ steps.binary-cache.outputs.key }}";
+          results-file = buildResultsFile;
         };
       };
 
@@ -74,14 +78,17 @@
             steps = [
               checkoutStep
               nixInstallerStep
-              nixpkgsRevStep
-              cacheNixStoreStep
+              restoreBinaryCacheStep
               { uses = "DeterminateSystems/flake-checker-action@v13"; }
               {
                 name = "Check flake";
                 env = evalStatsEnv;
-                run = "nix run github:Mic92/nix-fast-build -- --flake .#checks.x86_64-linux --impure --skip-cached --stream-json-lines";
+                run = lib.concatStringsSep "\n" [
+                  "set -o pipefail"
+                  "nix run github:Mic92/nix-fast-build -- --flake .#checks.x86_64-linux --impure --skip-cached --stream-json-lines 2>&1 | tee ${buildResultsFile}"
+                ];
               }
+              saveBinaryCacheStep
               (uploadEvalStatsStep "nix-eval-stats-check")
             ];
           };
