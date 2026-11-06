@@ -30,8 +30,8 @@
         };
 
       pathInput = {
-        description = "Directory holding the binary cache";
-        required = true;
+        description = "Directory holding the binary cache, which must match the file:// substituter in the Nix configuration";
+        default = "/tmp/nix-binary-cache";
       };
     in
     {
