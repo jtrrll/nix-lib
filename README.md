@@ -80,6 +80,7 @@ in
   - `respect-shell`
 
 - `flake`
+  - `binary-cache-actions`
   - `default`
   - `flake-metadata`
   - `home-configuration-build-checks`

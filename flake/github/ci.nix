@@ -4,16 +4,15 @@
 }:
 {
   config.perSystem =
-    { pkgs, ... }:
+    { config, pkgs, ... }:
     let
       yaml = pkgs.formats.yaml { };
 
-      binaryCacheDir = "/tmp/nix-binary-cache";
-      buildResultsFile = "nix_fast_build_results.jsonl";
+      binaryCache = config.binaryCacheActions;
 
       nixInstallerConf = lib.concatStringsSep "\n" [
         "allow-import-from-derivation = false"
-        "extra-substituters = https://devenv.cachix.org https://nix-community.cachix.org file://${binaryCacheDir}?trusted=1"
+        "extra-substituters = https://devenv.cachix.org https://nix-community.cachix.org ${binaryCache.substituter}"
         "extra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       ];
 
@@ -24,24 +23,6 @@
 
       checkoutStep = {
         uses = "actions/checkout@v7";
-      };
-
-      restoreBinaryCacheStep = {
-        id = "binary-cache";
-        name = "Restore binary cache";
-        uses = "./.github/actions/nix-binary-cache/restore";
-        "with".path = binaryCacheDir;
-      };
-
-      saveBinaryCacheStep = {
-        name = "Save binary cache";
-        "if" = "github.ref_name == github.event.repository.default_branch";
-        uses = "./.github/actions/nix-binary-cache/save";
-        "with" = {
-          path = binaryCacheDir;
-          key = "\${{ steps.binary-cache.outputs.key }}";
-          results-file = buildResultsFile;
-        };
       };
 
       uploadEvalStatsStep = artifactName: {
@@ -78,17 +59,17 @@
             steps = [
               checkoutStep
               nixInstallerStep
-              restoreBinaryCacheStep
+              binaryCache.steps.restore
               { uses = "DeterminateSystems/flake-checker-action@v13"; }
               {
                 name = "Check flake";
                 env = evalStatsEnv;
                 run = lib.concatStringsSep "\n" [
                   "set -o pipefail"
-                  "nix run github:Mic92/nix-fast-build -- --flake .#checks.x86_64-linux --impure --skip-cached --stream-json-lines 2>&1 | tee ${buildResultsFile}"
+                  "nix run github:Mic92/nix-fast-build -- --flake .#checks.x86_64-linux --impure --skip-cached --stream-json-lines 2>&1 | tee ${binaryCache.resultsFile}"
                 ];
               }
-              saveBinaryCacheStep
+              binaryCache.steps.save
               (uploadEvalStatsStep "nix-eval-stats-check")
             ];
           };
@@ -96,6 +77,8 @@
       };
     in
     {
+      config.binaryCacheActions.enable = true;
+
       config.files.file.".github/workflows/ci.yaml".source =
         pkgs.runCommand "ci.yaml" { nativeBuildInputs = [ pkgs.yq-go ]; }
           ''

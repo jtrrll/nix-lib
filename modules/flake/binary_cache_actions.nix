@@ -1,8 +1,17 @@
+{ flake-parts-lib, ... }:
 {
-  config.perSystem =
-    { pkgs, ... }:
+  options.perSystem = flake-parts-lib.mkPerSystemOption (
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
     let
+      cfg = config.binaryCacheActions;
       yaml = pkgs.formats.yaml { };
+
+      actionPath = name: ".github/actions/nix-binary-cache/${name}";
 
       mkAction =
         name: action:
@@ -10,7 +19,7 @@
           generated = yaml.generate "action.yml" action;
         in
         {
-          ".github/actions/nix-binary-cache/${name}/action.yml".source =
+          "${actionPath name}/action.yml".source =
             pkgs.runCommand "action.yml" { nativeBuildInputs = [ pkgs.yq-go ]; }
               ''
                 yq '
@@ -24,9 +33,54 @@
         description = "Directory holding the binary cache";
         required = true;
       };
+
+      restoreStepId = "binary-cache";
     in
     {
-      config.files.file =
+      options.binaryCacheActions = {
+        enable = lib.mkEnableOption "GitHub Actions that restore and save a file-based Nix binary cache";
+        directory = lib.mkOption {
+          type = lib.types.str;
+          default = "/tmp/nix-binary-cache";
+          description = "Directory holding the binary cache on the runner";
+        };
+        resultsFile = lib.mkOption {
+          type = lib.types.str;
+          default = "nix_fast_build_results.jsonl";
+          description = "File the workflow writes nix-fast-build --stream-json-lines output to";
+        };
+        substituter = lib.mkOption {
+          type = lib.types.str;
+          readOnly = true;
+          default = "file://${cfg.directory}?trusted=1";
+          description = "Substituter URL for the binary cache, to add to the Nix configuration";
+        };
+        steps = lib.mkOption {
+          type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
+          readOnly = true;
+          description = "Workflow steps that use the generated actions";
+          default = {
+            restore = {
+              id = restoreStepId;
+              name = "Restore binary cache";
+              uses = "./${actionPath "restore"}";
+              "with".path = cfg.directory;
+            };
+            save = {
+              name = "Save binary cache";
+              "if" = "github.ref_name == github.event.repository.default_branch";
+              uses = "./${actionPath "save"}";
+              "with" = {
+                path = cfg.directory;
+                key = "\${{ steps.${restoreStepId}.outputs.key }}";
+                results-file = cfg.resultsFile;
+              };
+            };
+          };
+        };
+      };
+
+      config.files.file = lib.mkIf cfg.enable (
         mkAction "restore" {
           name = "Restore Nix binary cache";
           description = "Restores a file-based Nix binary cache keyed on the nixpkgs pin in flake.lock";
@@ -114,6 +168,8 @@
               }
             ];
           };
-        };
-    };
+        }
+      );
+    }
+  );
 }
