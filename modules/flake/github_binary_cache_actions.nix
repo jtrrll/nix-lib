@@ -33,8 +33,6 @@
         description = "Directory holding the binary cache";
         required = true;
       };
-
-      restoreStepId = "binary-cache";
     in
     {
       options.githubBinaryCacheActions = {
@@ -51,8 +49,11 @@
         };
         keyPrefix = lib.mkOption {
           type = lib.types.str;
-          default = "nix-binary-cache";
-          description = "Prefix of the cache key, which the runner OS, the nixpkgs pin and the run ID are appended to";
+          description = "Prefix shared by the keys of caches to restore from, which may contain workflow expressions";
+        };
+        key = lib.mkOption {
+          type = lib.types.str;
+          description = "Key to save the binary cache under, which may contain workflow expressions. Must be unique per run, as caches are immutable";
         };
         substituter = lib.mkOption {
           type = lib.types.str;
@@ -66,7 +67,6 @@
           description = "Workflow steps that use the generated actions";
           default = {
             restore = {
-              id = restoreStepId;
               name = "Restore binary cache";
               uses = "./${actionPath}/restore";
               "with" = {
@@ -80,7 +80,7 @@
               uses = "./${actionPath}/save";
               "with" = {
                 path = cfg.directory;
-                key = "\${{ steps.${restoreStepId}.outputs.key }}";
+                inherit (cfg) key;
                 results-file = cfg.resultsFile;
               };
             };
@@ -91,35 +91,24 @@
       config.files.file = lib.mkIf cfg.enable (
         mkAction "restore" {
           name = "Restore Nix binary cache";
-          description = "Restores a file-based Nix binary cache keyed on the nixpkgs pin in flake.lock";
+          description = "Restores a file-based Nix binary cache from the most recent cache whose key starts with the given prefix";
           inputs = {
             path = pathInput;
             key-prefix = {
-              description = "Prefix of the cache key, which the runner OS, the nixpkgs pin and the run ID are appended to";
+              description = "Prefix shared by the keys of caches to restore from";
               required = true;
             };
-          };
-          outputs.key = {
-            description = "Key to save the updated binary cache under";
-            value = "\${{ steps.restore.outputs.cache-primary-key }}";
           };
           runs = {
             using = "composite";
             steps = [
               {
-                id = "nixpkgs";
-                name = "Read nixpkgs pin";
-                shell = "bash";
-                run = "echo \"rev=$(jq -r '.nodes[.nodes.root.inputs.nixpkgs].locked.rev' flake.lock)\" >> \"$GITHUB_OUTPUT\"";
-              }
-              {
-                id = "restore";
                 name = "Restore binary cache";
                 uses = "actions/cache/restore@v6";
                 "with" = {
                   path = "\${{ inputs.path }}";
-                  key = "\${{ inputs.key-prefix }}-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-\${{ github.run_id }}";
-                  restore-keys = "\${{ inputs.key-prefix }}-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-";
+                  key = "\${{ inputs.key-prefix }}";
+                  restore-keys = "\${{ inputs.key-prefix }}";
                 };
               }
             ];
@@ -131,7 +120,7 @@
           inputs = {
             path = pathInput;
             key = {
-              description = "Key to save the binary cache under, as output by the restore action";
+              description = "Key to save the binary cache under";
               required = true;
             };
             results-file = {

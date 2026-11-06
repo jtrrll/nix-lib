@@ -4,7 +4,7 @@ name: Save Nix binary cache
 description: Adds outputs built by nix-fast-build to a file-based Nix binary cache, leaving out paths cache.nixos.org already serves, and saves it
 inputs:
   key:
-    description: Key to save the binary cache under, as output by the restore action
+    description: Key to save the binary cache under
     required: true
   path:
     description: Directory holding the binary cache

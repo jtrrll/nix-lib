@@ -77,7 +77,11 @@
       };
     in
     {
-      config.githubBinaryCacheActions.enable = true;
+      config.githubBinaryCacheActions = {
+        enable = true;
+        keyPrefix = "nix-binary-cache-\${{ runner.os }}-\${{ hashFiles('flake.lock') }}-";
+        key = "${binaryCache.keyPrefix}\${{ github.run_id }}";
+      };
 
       config.files.file.".github/workflows/ci.yaml".source =
         pkgs.runCommand "ci.yaml" { nativeBuildInputs = [ pkgs.yq-go ]; }
