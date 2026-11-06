@@ -9,7 +9,7 @@
       yaml = pkgs.formats.yaml { };
 
       binaryCacheDir = "/tmp/nix-binary-cache";
-      binaryCacheKeyPrefix = "nix-binary-cache-\${{ runner.os }}-\${{ hashFiles('flake.lock') }}-";
+      binaryCacheKeyPrefix = "nix-binary-cache-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-";
       buildResultsFile = "nix_fast_build_results.jsonl";
 
       nixInstallerConf = lib.concatStringsSep "\n" [
@@ -25,6 +25,12 @@
 
       checkoutStep = {
         uses = "actions/checkout@v7";
+      };
+
+      readNixpkgsPinStep = {
+        id = "nixpkgs";
+        name = "Read nixpkgs pin";
+        run = "echo \"rev=$(jq -r '.nodes[.nodes.root.inputs.nixpkgs].locked.rev' flake.lock)\" >> \"$GITHUB_OUTPUT\"";
       };
 
       restoreBinaryCacheStep = {
@@ -81,6 +87,7 @@
             steps = [
               checkoutStep
               nixInstallerStep
+              readNixpkgsPinStep
               restoreBinaryCacheStep
               { uses = "DeterminateSystems/flake-checker-action@v13"; }
               {
