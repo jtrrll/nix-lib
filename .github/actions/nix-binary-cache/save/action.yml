@@ -1,7 +1,7 @@
 %YAML 1.1
 ---
 name: Save Nix binary cache
-description: Adds store paths to a file-based Nix binary cache, leaving out paths cache.nixos.org already serves, and saves it
+description: Adds store paths to a file-based Nix binary cache, leaving out paths the upstream caches already serve, and saves it
 inputs:
   key:
     description: Key to save the binary cache under
@@ -9,18 +9,22 @@ inputs:
   path:
     description: Directory holding the binary cache
     required: true
-  paths:
+  store-paths:
     description: Newline-separated store paths to add to the binary cache
     required: true
+  upstream-caches:
+    default: https://cache.nixos.org
+    description: Space-separated URLs of binary caches whose paths are left out of the saved cache
 runs:
   steps:
     - id: push
       name: Push built outputs to binary cache
       env:
         CACHE_DIR: ${{ inputs.path }}
-        STORE_PATHS: ${{ inputs.paths }}
+        STORE_PATHS: ${{ inputs.store-paths }}
+        UPSTREAM_CACHES: ${{ inputs.upstream-caches }}
       shell: bash
-      run: "built_outputs=\"$RUNNER_TEMP/built_outputs.txt\"\nprintf '%s\\n' \"$STORE_PATHS\" | sed '/^$/d' | sort -u > \"$built_outputs\"\necho \"count=$(wc -l < \"$built_outputs\")\" >> \"$GITHUB_OUTPUT\"\n[ -s \"$built_outputs\" ] || exit 0\n\n# The Nix daemon creates the cache directory as root when it first queries the substituter.\nmkdir -p \"$CACHE_DIR\"\nsudo chown -R \"$(id -u):$(id -g)\" \"$CACHE_DIR\"\n\nxargs nix copy --to \"file://$CACHE_DIR?compression=none\" < \"$built_outputs\"\n\ncd \"$CACHE_DIR\" || exit 1\n# Drop paths that cache.nixos.org already serves, then the NARs no remaining narinfo uses.\nfind . -maxdepth 1 -name '*.narinfo' -printf '%f\\n' | sed 's/\\.narinfo$//' \\\n  | xargs -P 32 -I{} sh -c 'curl -fsI --retry 2 -o /dev/null https://cache.nixos.org/{}.narinfo && rm {}.narinfo || true'\ngrep -h '^URL:' ./*.narinfo | sed 's/^URL: //' | sort -u > \"$RUNNER_TEMP/kept_nars.txt\"\nfind nar -type f | sort | comm -23 - \"$RUNNER_TEMP/kept_nars.txt\" | xargs --no-run-if-empty rm\n"
+      run: "built_outputs=\"$RUNNER_TEMP/built_outputs.txt\"\nprintf '%s\\n' \"$STORE_PATHS\" | sed '/^$/d' | sort -u > \"$built_outputs\"\necho \"count=$(wc -l < \"$built_outputs\")\" >> \"$GITHUB_OUTPUT\"\n[ -s \"$built_outputs\" ] || exit 0\n\n# The Nix daemon creates the cache directory as root when it first queries the substituter.\nmkdir -p \"$CACHE_DIR\"\nsudo chown -R \"$(id -u):$(id -g)\" \"$CACHE_DIR\"\n\nxargs nix copy --to \"file://$CACHE_DIR?compression=none\" < \"$built_outputs\"\n\ncd \"$CACHE_DIR\" || exit 1\n# Drop paths the upstream caches already serve, then the NARs no remaining narinfo uses.\nfind . -maxdepth 1 -name '*.narinfo' -printf '%f\\n' | sed 's/\\.narinfo$//' \\\n  | xargs -P 32 -I{} sh -c 'for cache in $UPSTREAM_CACHES; do curl -fsI --retry 2 -o /dev/null \"${cache%/}/$1.narinfo\" && rm \"$1.narinfo\" && break; done; true' _ {}\ngrep -h '^URL:' ./*.narinfo | sed 's/^URL: //' | sort -u > \"$RUNNER_TEMP/kept_nars.txt\"\nfind nar -type f | sort | comm -23 - \"$RUNNER_TEMP/kept_nars.txt\" | xargs --no-run-if-empty rm\n"
     - name: Save binary cache
       if: steps.push.outputs.count != '0'
       uses: actions/cache/save@v6

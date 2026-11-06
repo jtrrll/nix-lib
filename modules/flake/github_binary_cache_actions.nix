@@ -67,7 +67,7 @@
         }
         // mkAction "save" {
           name = "Save Nix binary cache";
-          description = "Adds store paths to a file-based Nix binary cache, leaving out paths cache.nixos.org already serves, and saves it";
+          description = "Adds store paths to a file-based Nix binary cache, leaving out paths the upstream caches already serve, and saves it";
           inputs = {
             path = pathInput;
             key = {
@@ -77,6 +77,10 @@
             store-paths = {
               description = "Newline-separated store paths to add to the binary cache";
               required = true;
+            };
+            upstream-caches = {
+              description = "Space-separated URLs of binary caches whose paths are left out of the saved cache";
+              default = "https://cache.nixos.org";
             };
           };
           runs = {
@@ -89,6 +93,7 @@
                 env = {
                   CACHE_DIR = "\${{ inputs.path }}";
                   STORE_PATHS = "\${{ inputs.store-paths }}";
+                  UPSTREAM_CACHES = "\${{ inputs.upstream-caches }}";
                 };
                 run = ''
                   built_outputs="$RUNNER_TEMP/built_outputs.txt"
@@ -103,9 +108,9 @@
                   xargs nix copy --to "file://$CACHE_DIR?compression=none" < "$built_outputs"
 
                   cd "$CACHE_DIR" || exit 1
-                  # Drop paths that cache.nixos.org already serves, then the NARs no remaining narinfo uses.
+                  # Drop paths the upstream caches already serve, then the NARs no remaining narinfo uses.
                   find . -maxdepth 1 -name '*.narinfo' -printf '%f\n' | sed 's/\.narinfo$//' \
-                    | xargs -P 32 -I{} sh -c 'curl -fsI --retry 2 -o /dev/null https://cache.nixos.org/{}.narinfo && rm {}.narinfo || true'
+                    | xargs -P 32 -I{} sh -c 'for cache in $UPSTREAM_CACHES; do curl -fsI --retry 2 -o /dev/null "''${cache%/}/$1.narinfo" && rm "$1.narinfo" && break; done; true' _ {}
                   grep -h '^URL:' ./*.narinfo | sed 's/^URL: //' | sort -u > "$RUNNER_TEMP/kept_nars.txt"
                   find nar -type f | sort | comm -23 - "$RUNNER_TEMP/kept_nars.txt" | xargs --no-run-if-empty rm
                 '';

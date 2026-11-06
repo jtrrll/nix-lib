@@ -42,14 +42,14 @@ jobs:
       - id: built-paths
         name: List built paths
         if: github.ref_name == github.event.repository.default_branch
-        run: "{\n  echo 'paths<<EOF'\n  jq -Rr 'fromjson? | select(.type == \"BUILD\" and .success) | .outputs[]' nix_fast_build_results.jsonl\n  echo EOF\n} >> \"$GITHUB_OUTPUT\""
+        run: "{\n  echo 'store-paths<<EOF'\n  jq -Rr 'fromjson? | select(.type == \"BUILD\" and .success) | .outputs[]' nix_fast_build_results.jsonl\n  echo EOF\n} >> \"$GITHUB_OUTPUT\""
       - name: Save binary cache
         if: github.ref_name == github.event.repository.default_branch
         uses: ./.github/actions/nix-binary-cache/save
         with:
           key: nix-binary-cache-${{ runner.os }}-${{ steps.nixpkgs.outputs.rev }}-${{ github.run_id }}
           path: /tmp/nix-binary-cache
-          paths: ${{ steps.built-paths.outputs.paths }}
+          store-paths: ${{ steps.built-paths.outputs.store-paths }}
       - name: Upload Nix evaluation statistics
         uses: actions/upload-artifact@v7
         with:
