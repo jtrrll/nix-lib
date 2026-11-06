@@ -50,7 +50,7 @@
         "if" = onDefaultBranch;
         run = lib.concatStringsSep "\n" [
           "{"
-          "  echo 'paths<<EOF'"
+          "  echo 'store-paths<<EOF'"
           "  jq -Rr 'fromjson? | select(.type == \"BUILD\" and .success) | .outputs[]' ${buildResultsFile}"
           "  echo EOF"
           "} >> \"$GITHUB_OUTPUT\""
@@ -64,7 +64,7 @@
         "with" = {
           path = binaryCacheDir;
           key = "${binaryCacheKeyPrefix}\${{ github.run_id }}";
-          paths = "\${{ steps.built-paths.outputs.paths }}";
+          store-paths = "\${{ steps.built-paths.outputs.store-paths }}";
         };
       };
 

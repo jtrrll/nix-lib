@@ -74,7 +74,7 @@
               description = "Key to save the binary cache under";
               required = true;
             };
-            paths = {
+            store-paths = {
               description = "Newline-separated store paths to add to the binary cache";
               required = true;
             };
@@ -88,7 +88,7 @@
                 shell = "bash";
                 env = {
                   CACHE_DIR = "\${{ inputs.path }}";
-                  STORE_PATHS = "\${{ inputs.paths }}";
+                  STORE_PATHS = "\${{ inputs.store-paths }}";
                 };
                 run = ''
                   built_outputs="$RUNNER_TEMP/built_outputs.txt"
