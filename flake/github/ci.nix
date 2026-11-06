@@ -42,14 +42,29 @@
         };
       };
 
+      onDefaultBranch = "github.ref_name == github.event.repository.default_branch";
+
+      listBuiltPathsStep = {
+        id = "built-paths";
+        name = "List built paths";
+        "if" = onDefaultBranch;
+        run = lib.concatStringsSep "\n" [
+          "{"
+          "  echo 'paths<<EOF'"
+          "  jq -Rr 'fromjson? | select(.type == \"BUILD\" and .success) | .outputs[]' ${buildResultsFile}"
+          "  echo EOF"
+          "} >> \"$GITHUB_OUTPUT\""
+        ];
+      };
+
       saveBinaryCacheStep = {
         name = "Save binary cache";
-        "if" = "github.ref_name == github.event.repository.default_branch";
+        "if" = onDefaultBranch;
         uses = "./.github/actions/nix-binary-cache/save";
         "with" = {
           path = binaryCacheDir;
           key = "${binaryCacheKeyPrefix}\${{ github.run_id }}";
-          results-file = buildResultsFile;
+          paths = "\${{ steps.built-paths.outputs.paths }}";
         };
       };
 
@@ -98,6 +113,7 @@
                   "nix run github:Mic92/nix-fast-build -- --flake .#checks.x86_64-linux --impure --skip-cached --stream-json-lines 2>&1 | tee ${buildResultsFile}"
                 ];
               }
+              listBuiltPathsStep
               saveBinaryCacheStep
               (uploadEvalStatsStep "nix-eval-stats-check")
             ];

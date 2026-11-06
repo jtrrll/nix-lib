@@ -67,15 +67,15 @@
         }
         // mkAction "save" {
           name = "Save Nix binary cache";
-          description = "Adds outputs built by nix-fast-build to a file-based Nix binary cache, leaving out paths cache.nixos.org already serves, and saves it";
+          description = "Adds store paths to a file-based Nix binary cache, leaving out paths cache.nixos.org already serves, and saves it";
           inputs = {
             path = pathInput;
             key = {
               description = "Key to save the binary cache under";
               required = true;
             };
-            results-file = {
-              description = "nix-fast-build --stream-json-lines output";
+            paths = {
+              description = "Newline-separated store paths to add to the binary cache";
               required = true;
             };
           };
@@ -88,12 +88,11 @@
                 shell = "bash";
                 env = {
                   CACHE_DIR = "\${{ inputs.path }}";
-                  RESULTS_FILE = "\${{ inputs.results-file }}";
+                  STORE_PATHS = "\${{ inputs.paths }}";
                 };
                 run = ''
                   built_outputs="$RUNNER_TEMP/built_outputs.txt"
-                  jq -Rr 'fromjson? | select(.type == "BUILD" and .success) | .outputs[]' "$RESULTS_FILE" \
-                    | sort -u > "$built_outputs"
+                  printf '%s\n' "$STORE_PATHS" | sed '/^$/d' | sort -u > "$built_outputs"
                   echo "count=$(wc -l < "$built_outputs")" >> "$GITHUB_OUTPUT"
                   [ -s "$built_outputs" ] || exit 0
 
