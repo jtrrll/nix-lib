@@ -11,7 +11,7 @@
       cfg = config.binaryCacheActions;
       yaml = pkgs.formats.yaml { };
 
-      actionPath = name: ".github/actions/nix-binary-cache/${name}";
+      actionPath = ".github/actions/nix-binary-cache";
 
       mkAction =
         name: action:
@@ -19,7 +19,7 @@
           generated = yaml.generate "action.yml" action;
         in
         {
-          "${actionPath name}/action.yml".source =
+          "${actionPath}/${name}/action.yml".source =
             pkgs.runCommand "action.yml" { nativeBuildInputs = [ pkgs.yq-go ]; }
               ''
                 yq '
@@ -63,13 +63,13 @@
             restore = {
               id = restoreStepId;
               name = "Restore binary cache";
-              uses = "./${actionPath "restore"}";
+              uses = "./${actionPath}/restore";
               "with".path = cfg.directory;
             };
             save = {
               name = "Save binary cache";
               "if" = "github.ref_name == github.event.repository.default_branch";
-              uses = "./${actionPath "save"}";
+              uses = "./${actionPath}/save";
               "with" = {
                 path = cfg.directory;
                 key = "\${{ steps.${restoreStepId}.outputs.key }}";
