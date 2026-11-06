@@ -29,6 +29,7 @@ jobs:
         name: Restore binary cache
         uses: ./.github/actions/nix-binary-cache/restore
         with:
+          key-prefix: nix-binary-cache
           path: /tmp/nix-binary-cache
       - uses: DeterminateSystems/flake-checker-action@v13
       - name: Check flake

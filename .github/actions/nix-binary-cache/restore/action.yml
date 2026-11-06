@@ -3,6 +3,9 @@
 name: Restore Nix binary cache
 description: Restores a file-based Nix binary cache keyed on the nixpkgs pin in flake.lock
 inputs:
+  key-prefix:
+    description: Prefix of the cache key, which the runner OS, the nixpkgs pin and the run ID are appended to
+    required: true
   path:
     description: Directory holding the binary cache
     required: true
@@ -20,7 +23,7 @@ runs:
       name: Restore binary cache
       uses: actions/cache/restore@v6
       with:
-        key: nix-binary-cache-${{ runner.os }}-${{ steps.nixpkgs.outputs.rev }}-${{ github.run_id }}
+        key: ${{ inputs.key-prefix }}-${{ runner.os }}-${{ steps.nixpkgs.outputs.rev }}-${{ github.run_id }}
         path: ${{ inputs.path }}
-        restore-keys: nix-binary-cache-${{ runner.os }}-${{ steps.nixpkgs.outputs.rev }}-
+        restore-keys: ${{ inputs.key-prefix }}-${{ runner.os }}-${{ steps.nixpkgs.outputs.rev }}-
   using: composite

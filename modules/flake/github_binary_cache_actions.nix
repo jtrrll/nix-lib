@@ -49,6 +49,11 @@
           default = "nix_fast_build_results.jsonl";
           description = "File the workflow writes nix-fast-build --stream-json-lines output to";
         };
+        keyPrefix = lib.mkOption {
+          type = lib.types.str;
+          default = "nix-binary-cache";
+          description = "Prefix of the cache key, which the runner OS, the nixpkgs pin and the run ID are appended to";
+        };
         substituter = lib.mkOption {
           type = lib.types.str;
           readOnly = true;
@@ -64,7 +69,10 @@
               id = restoreStepId;
               name = "Restore binary cache";
               uses = "./${actionPath}/restore";
-              "with".path = cfg.directory;
+              "with" = {
+                path = cfg.directory;
+                key-prefix = cfg.keyPrefix;
+              };
             };
             save = {
               name = "Save binary cache";
@@ -84,7 +92,13 @@
         mkAction "restore" {
           name = "Restore Nix binary cache";
           description = "Restores a file-based Nix binary cache keyed on the nixpkgs pin in flake.lock";
-          inputs.path = pathInput;
+          inputs = {
+            path = pathInput;
+            key-prefix = {
+              description = "Prefix of the cache key, which the runner OS, the nixpkgs pin and the run ID are appended to";
+              required = true;
+            };
+          };
           outputs.key = {
             description = "Key to save the updated binary cache under";
             value = "\${{ steps.restore.outputs.cache-primary-key }}";
@@ -104,8 +118,8 @@
                 uses = "actions/cache/restore@v6";
                 "with" = {
                   path = "\${{ inputs.path }}";
-                  key = "nix-binary-cache-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-\${{ github.run_id }}";
-                  restore-keys = "nix-binary-cache-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-";
+                  key = "\${{ inputs.key-prefix }}-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-\${{ github.run_id }}";
+                  restore-keys = "\${{ inputs.key-prefix }}-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-";
                 };
               }
             ];
