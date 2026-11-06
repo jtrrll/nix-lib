@@ -8,7 +8,7 @@
     let
       yaml = pkgs.formats.yaml { };
 
-      binaryCache = config.binaryCacheActions;
+      binaryCache = config.githubBinaryCacheActions;
 
       nixInstallerConf = lib.concatStringsSep "\n" [
         "allow-import-from-derivation = false"
@@ -77,7 +77,7 @@
       };
     in
     {
-      config.binaryCacheActions.enable = true;
+      config.githubBinaryCacheActions.enable = true;
 
       config.files.file.".github/workflows/ci.yaml".source =
         pkgs.runCommand "ci.yaml" { nativeBuildInputs = [ pkgs.yq-go ]; }

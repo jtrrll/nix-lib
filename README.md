@@ -80,9 +80,9 @@ in
   - `respect-shell`
 
 - `flake`
-  - `binary-cache-actions`
   - `default`
   - `flake-metadata`
+  - `github-binary-cache-actions`
   - `home-configuration-build-checks`
   - `nixos-configuration-build-checks`
   - `nixos-configuration-test-checks`

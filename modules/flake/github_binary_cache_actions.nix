@@ -8,7 +8,7 @@
       ...
     }:
     let
-      cfg = config.binaryCacheActions;
+      cfg = config.githubBinaryCacheActions;
       yaml = pkgs.formats.yaml { };
 
       actionPath = ".github/actions/nix-binary-cache";
@@ -37,7 +37,7 @@
       restoreStepId = "binary-cache";
     in
     {
-      options.binaryCacheActions = {
+      options.githubBinaryCacheActions = {
         enable = lib.mkEnableOption "GitHub Actions that restore and save a file-based Nix binary cache";
         directory = lib.mkOption {
           type = lib.types.str;
