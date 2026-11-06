@@ -4,15 +4,17 @@
 }:
 {
   config.perSystem =
-    { config, pkgs, ... }:
+    { pkgs, ... }:
     let
       yaml = pkgs.formats.yaml { };
 
-      binaryCache = config.githubBinaryCacheActions;
+      binaryCacheDir = "/tmp/nix-binary-cache";
+      binaryCacheKeyPrefix = "nix-binary-cache-\${{ runner.os }}-\${{ hashFiles('flake.lock') }}-";
+      buildResultsFile = "nix_fast_build_results.jsonl";
 
       nixInstallerConf = lib.concatStringsSep "\n" [
         "allow-import-from-derivation = false"
-        "extra-substituters = https://devenv.cachix.org https://nix-community.cachix.org ${binaryCache.substituter}"
+        "extra-substituters = https://devenv.cachix.org https://nix-community.cachix.org file://${binaryCacheDir}?trusted=1"
         "extra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       ];
 
@@ -23,6 +25,26 @@
 
       checkoutStep = {
         uses = "actions/checkout@v7";
+      };
+
+      restoreBinaryCacheStep = {
+        name = "Restore binary cache";
+        uses = "./.github/actions/nix-binary-cache/restore";
+        "with" = {
+          path = binaryCacheDir;
+          key-prefix = binaryCacheKeyPrefix;
+        };
+      };
+
+      saveBinaryCacheStep = {
+        name = "Save binary cache";
+        "if" = "github.ref_name == github.event.repository.default_branch";
+        uses = "./.github/actions/nix-binary-cache/save";
+        "with" = {
+          path = binaryCacheDir;
+          key = "${binaryCacheKeyPrefix}\${{ github.run_id }}";
+          results-file = buildResultsFile;
+        };
       };
 
       uploadEvalStatsStep = artifactName: {
@@ -59,17 +81,17 @@
             steps = [
               checkoutStep
               nixInstallerStep
-              binaryCache.steps.restore
+              restoreBinaryCacheStep
               { uses = "DeterminateSystems/flake-checker-action@v13"; }
               {
                 name = "Check flake";
                 env = evalStatsEnv;
                 run = lib.concatStringsSep "\n" [
                   "set -o pipefail"
-                  "nix run github:Mic92/nix-fast-build -- --flake .#checks.x86_64-linux --impure --skip-cached --stream-json-lines 2>&1 | tee ${binaryCache.resultsFile}"
+                  "nix run github:Mic92/nix-fast-build -- --flake .#checks.x86_64-linux --impure --skip-cached --stream-json-lines 2>&1 | tee ${buildResultsFile}"
                 ];
               }
-              binaryCache.steps.save
+              saveBinaryCacheStep
               (uploadEvalStatsStep "nix-eval-stats-check")
             ];
           };
@@ -77,11 +99,7 @@
       };
     in
     {
-      config.githubBinaryCacheActions = {
-        enable = true;
-        keyPrefix = "nix-binary-cache-\${{ runner.os }}-\${{ hashFiles('flake.lock') }}-";
-        key = "${binaryCache.keyPrefix}\${{ github.run_id }}";
-      };
+      config.githubBinaryCacheActions.enable = true;
 
       config.files.file.".github/workflows/ci.yaml".source =
         pkgs.runCommand "ci.yaml" { nativeBuildInputs = [ pkgs.yq-go ]; }

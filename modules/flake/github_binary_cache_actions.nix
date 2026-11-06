@@ -37,55 +37,6 @@
     {
       options.githubBinaryCacheActions = {
         enable = lib.mkEnableOption "GitHub Actions that restore and save a file-based Nix binary cache";
-        directory = lib.mkOption {
-          type = lib.types.str;
-          default = "/tmp/nix-binary-cache";
-          description = "Directory holding the binary cache on the runner";
-        };
-        resultsFile = lib.mkOption {
-          type = lib.types.str;
-          default = "nix_fast_build_results.jsonl";
-          description = "File the workflow writes nix-fast-build --stream-json-lines output to";
-        };
-        keyPrefix = lib.mkOption {
-          type = lib.types.str;
-          description = "Prefix shared by the keys of caches to restore from, which may contain workflow expressions";
-        };
-        key = lib.mkOption {
-          type = lib.types.str;
-          description = "Key to save the binary cache under, which may contain workflow expressions. Must be unique per run, as caches are immutable";
-        };
-        substituter = lib.mkOption {
-          type = lib.types.str;
-          readOnly = true;
-          default = "file://${cfg.directory}?trusted=1";
-          description = "Substituter URL for the binary cache, to add to the Nix configuration";
-        };
-        steps = lib.mkOption {
-          type = lib.types.attrsOf (lib.types.attrsOf lib.types.anything);
-          readOnly = true;
-          description = "Workflow steps that use the generated actions";
-          default = {
-            restore = {
-              name = "Restore binary cache";
-              uses = "./${actionPath}/restore";
-              "with" = {
-                path = cfg.directory;
-                key-prefix = cfg.keyPrefix;
-              };
-            };
-            save = {
-              name = "Save binary cache";
-              "if" = "github.ref_name == github.event.repository.default_branch";
-              uses = "./${actionPath}/save";
-              "with" = {
-                path = cfg.directory;
-                inherit (cfg) key;
-                results-file = cfg.resultsFile;
-              };
-            };
-          };
-        };
       };
 
       config.files.file = lib.mkIf cfg.enable (
