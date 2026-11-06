@@ -28,11 +28,6 @@
                 ' ${generated} > $out
               '';
         };
-
-      pathInput = {
-        description = "Directory holding the binary cache, which must match the file:// substituter in the Nix configuration";
-        default = "/tmp/nix-binary-cache";
-      };
     in
     {
       options.githubBinaryCacheActions = {
@@ -44,7 +39,10 @@
           name = "Restore Nix binary cache";
           description = "Restores a file-based Nix binary cache from the most recent cache whose key starts with the given prefix";
           inputs = {
-            path = pathInput;
+            path = {
+              description = "Directory holding the binary cache, which must match the file:// substituter in the Nix configuration";
+              default = "/tmp/nix-binary-cache";
+            };
             key-prefix = {
               description = "Prefix shared by the keys of caches to restore from";
               required = true;
@@ -69,7 +67,10 @@
           name = "Save Nix binary cache";
           description = "Adds store paths to a file-based Nix binary cache, leaving out paths the upstream caches already serve, and saves it";
           inputs = {
-            path = pathInput;
+            path = {
+              description = "Directory holding the binary cache, which must match the file:// substituter in the Nix configuration";
+              default = "/tmp/nix-binary-cache";
+            };
             key = {
               description = "Key to save the binary cache under";
               required = true;
