@@ -9,6 +9,7 @@
       yaml = pkgs.formats.yaml { };
 
       binaryCacheDir = "/tmp/nix-binary-cache";
+      binaryCacheKeyPrefix = "nix-binary-cache-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-";
       buildResultsFile = "nix_fast_build_results.jsonl";
 
       nixInstallerConf = lib.concatStringsSep "\n" [
@@ -26,11 +27,19 @@
         uses = "actions/checkout@v7";
       };
 
+      readNixpkgsPinStep = {
+        id = "nixpkgs";
+        name = "Read nixpkgs pin";
+        run = "echo \"rev=$(jq -r '.nodes[.nodes.root.inputs.nixpkgs].locked.rev' flake.lock)\" >> \"$GITHUB_OUTPUT\"";
+      };
+
       restoreBinaryCacheStep = {
-        id = "binary-cache";
         name = "Restore binary cache";
         uses = "./.github/actions/nix-binary-cache/restore";
-        "with".path = binaryCacheDir;
+        "with" = {
+          path = binaryCacheDir;
+          key-prefix = binaryCacheKeyPrefix;
+        };
       };
 
       saveBinaryCacheStep = {
@@ -39,7 +48,7 @@
         uses = "./.github/actions/nix-binary-cache/save";
         "with" = {
           path = binaryCacheDir;
-          key = "\${{ steps.binary-cache.outputs.key }}";
+          key = "${binaryCacheKeyPrefix}\${{ github.run_id }}";
           results-file = buildResultsFile;
         };
       };
@@ -78,6 +87,7 @@
             steps = [
               checkoutStep
               nixInstallerStep
+              readNixpkgsPinStep
               restoreBinaryCacheStep
               { uses = "DeterminateSystems/flake-checker-action@v13"; }
               {
@@ -96,6 +106,8 @@
       };
     in
     {
+      config.githubBinaryCacheActions.enable = true;
+
       config.files.file.".github/workflows/ci.yaml".source =
         pkgs.runCommand "ci.yaml" { nativeBuildInputs = [ pkgs.yq-go ]; }
           ''

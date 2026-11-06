@@ -25,10 +25,13 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v22
         with:
           extra-conf: "allow-import-from-derivation = false\nextra-substituters = https://devenv.cachix.org https://nix-community.cachix.org file:///tmp/nix-binary-cache?trusted=1\nextra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      - id: binary-cache
-        name: Restore binary cache
+      - id: nixpkgs
+        name: Read nixpkgs pin
+        run: echo "rev=$(jq -r '.nodes[.nodes.root.inputs.nixpkgs].locked.rev' flake.lock)" >> "$GITHUB_OUTPUT"
+      - name: Restore binary cache
         uses: ./.github/actions/nix-binary-cache/restore
         with:
+          key-prefix: nix-binary-cache-${{ runner.os }}-${{ steps.nixpkgs.outputs.rev }}-
           path: /tmp/nix-binary-cache
       - uses: DeterminateSystems/flake-checker-action@v13
       - name: Check flake
@@ -40,7 +43,7 @@ jobs:
         if: github.ref_name == github.event.repository.default_branch
         uses: ./.github/actions/nix-binary-cache/save
         with:
-          key: ${{ steps.binary-cache.outputs.key }}
+          key: nix-binary-cache-${{ runner.os }}-${{ steps.nixpkgs.outputs.rev }}-${{ github.run_id }}
           path: /tmp/nix-binary-cache
           results-file: nix_fast_build_results.jsonl
       - name: Upload Nix evaluation statistics

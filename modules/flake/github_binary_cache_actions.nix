@@ -1,8 +1,17 @@
+{ flake-parts-lib, ... }:
 {
-  config.perSystem =
-    { pkgs, ... }:
+  options.perSystem = flake-parts-lib.mkPerSystemOption (
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
     let
+      cfg = config.githubBinaryCacheActions;
       yaml = pkgs.formats.yaml { };
+
+      actionPath = ".github/actions/nix-binary-cache";
 
       mkAction =
         name: action:
@@ -10,7 +19,7 @@
           generated = yaml.generate "action.yml" action;
         in
         {
-          ".github/actions/nix-binary-cache/${name}/action.yml".source =
+          "${actionPath}/${name}/action.yml".source =
             pkgs.runCommand "action.yml" { nativeBuildInputs = [ pkgs.yq-go ]; }
               ''
                 yq '
@@ -26,32 +35,31 @@
       };
     in
     {
-      config.files.file =
+      options.githubBinaryCacheActions = {
+        enable = lib.mkEnableOption "GitHub Actions that restore and save a file-based Nix binary cache";
+      };
+
+      config.files.file = lib.mkIf cfg.enable (
         mkAction "restore" {
           name = "Restore Nix binary cache";
-          description = "Restores a file-based Nix binary cache keyed on the nixpkgs pin in flake.lock";
-          inputs.path = pathInput;
-          outputs.key = {
-            description = "Key to save the updated binary cache under";
-            value = "\${{ steps.restore.outputs.cache-primary-key }}";
+          description = "Restores a file-based Nix binary cache from the most recent cache whose key starts with the given prefix";
+          inputs = {
+            path = pathInput;
+            key-prefix = {
+              description = "Prefix shared by the keys of caches to restore from";
+              required = true;
+            };
           };
           runs = {
             using = "composite";
             steps = [
               {
-                id = "nixpkgs";
-                name = "Read nixpkgs pin";
-                shell = "bash";
-                run = "echo \"rev=$(jq -r '.nodes[.nodes.root.inputs.nixpkgs].locked.rev' flake.lock)\" >> \"$GITHUB_OUTPUT\"";
-              }
-              {
-                id = "restore";
                 name = "Restore binary cache";
                 uses = "actions/cache/restore@v6";
                 "with" = {
                   path = "\${{ inputs.path }}";
-                  key = "nix-binary-cache-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-\${{ github.run_id }}";
-                  restore-keys = "nix-binary-cache-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-";
+                  key = "\${{ inputs.key-prefix }}";
+                  restore-keys = "\${{ inputs.key-prefix }}";
                 };
               }
             ];
@@ -63,7 +71,7 @@
           inputs = {
             path = pathInput;
             key = {
-              description = "Key to save the binary cache under, as output by the restore action";
+              description = "Key to save the binary cache under";
               required = true;
             };
             results-file = {
@@ -114,6 +122,8 @@
               }
             ];
           };
-        };
-    };
+        }
+      );
+    }
+  );
 }
