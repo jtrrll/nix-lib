@@ -7,8 +7,8 @@ inputs:
     description: Prefix shared by the keys of caches to restore from
     required: true
   path:
-    description: Directory holding the binary cache
-    required: true
+    default: /tmp/nix-binary-cache
+    description: Directory holding the binary cache, which must match the file:// substituter in the Nix configuration
 runs:
   steps:
     - name: Restore binary cache

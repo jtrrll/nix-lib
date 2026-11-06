@@ -39,13 +39,17 @@ jobs:
           NIX_SHOW_STATS: 1
           NIX_SHOW_STATS_PATH: nix_eval_stats.json
         run: "set -o pipefail\nnix run github:Mic92/nix-fast-build -- --flake .#checks.x86_64-linux --impure --skip-cached --stream-json-lines 2>&1 | tee nix_fast_build_results.jsonl"
+      - id: built-paths
+        name: List built paths
+        if: github.ref_name == github.event.repository.default_branch
+        run: "{\n  echo 'store-paths<<EOF'\n  jq -Rr 'fromjson? | select(.type == \"BUILD\" and .success) | .outputs[]' nix_fast_build_results.jsonl\n  echo EOF\n} >> \"$GITHUB_OUTPUT\""
       - name: Save binary cache
         if: github.ref_name == github.event.repository.default_branch
         uses: ./.github/actions/nix-binary-cache/save
         with:
           key: nix-binary-cache-${{ runner.os }}-${{ steps.nixpkgs.outputs.rev }}-${{ github.run_id }}
           path: /tmp/nix-binary-cache
-          results-file: nix_fast_build_results.jsonl
+          store-paths: ${{ steps.built-paths.outputs.store-paths }}
       - name: Upload Nix evaluation statistics
         uses: actions/upload-artifact@v7
         with:
