@@ -9,6 +9,7 @@
       yaml = pkgs.formats.yaml { };
 
       binaryCacheDir = "/tmp/nix-binary-cache";
+      binaryCacheKeyPrefix = "nix-binary-cache-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-";
       buildResultsFile = "nix_fast_build_results.jsonl";
 
       nixInstallerConf = lib.concatStringsSep "\n" [
@@ -26,21 +27,44 @@
         uses = "actions/checkout@v7";
       };
 
+      readNixpkgsPinStep = {
+        id = "nixpkgs";
+        name = "Read nixpkgs pin";
+        run = "echo \"rev=$(jq -r '.nodes[.nodes.root.inputs.nixpkgs].locked.rev' flake.lock)\" >> \"$GITHUB_OUTPUT\"";
+      };
+
       restoreBinaryCacheStep = {
-        id = "binary-cache";
         name = "Restore binary cache";
         uses = "./.github/actions/nix-binary-cache/restore";
-        "with".path = binaryCacheDir;
+        "with" = {
+          path = binaryCacheDir;
+          key-prefix = binaryCacheKeyPrefix;
+        };
+      };
+
+      onDefaultBranch = "github.ref_name == github.event.repository.default_branch";
+
+      listBuiltPathsStep = {
+        id = "built-paths";
+        name = "List built paths";
+        "if" = onDefaultBranch;
+        run = lib.concatStringsSep "\n" [
+          "{"
+          "  echo 'store-paths<<EOF'"
+          "  jq -Rr 'fromjson? | select(.type == \"BUILD\" and .success) | .outputs[]' ${buildResultsFile}"
+          "  echo EOF"
+          "} >> \"$GITHUB_OUTPUT\""
+        ];
       };
 
       saveBinaryCacheStep = {
         name = "Save binary cache";
-        "if" = "github.ref_name == github.event.repository.default_branch";
+        "if" = onDefaultBranch;
         uses = "./.github/actions/nix-binary-cache/save";
         "with" = {
           path = binaryCacheDir;
-          key = "\${{ steps.binary-cache.outputs.key }}";
-          results-file = buildResultsFile;
+          key = "${binaryCacheKeyPrefix}\${{ github.run_id }}";
+          store-paths = "\${{ steps.built-paths.outputs.store-paths }}";
         };
       };
 
@@ -78,6 +102,7 @@
             steps = [
               checkoutStep
               nixInstallerStep
+              readNixpkgsPinStep
               restoreBinaryCacheStep
               { uses = "DeterminateSystems/flake-checker-action@v13"; }
               {
@@ -88,6 +113,7 @@
                   "nix run github:Mic92/nix-fast-build -- --flake .#checks.x86_64-linux --impure --skip-cached --stream-json-lines 2>&1 | tee ${buildResultsFile}"
                 ];
               }
+              listBuiltPathsStep
               saveBinaryCacheStep
               (uploadEvalStatsStep "nix-eval-stats-check")
             ];
@@ -96,6 +122,8 @@
       };
     in
     {
+      config.githubBinaryCacheActions.enable = true;
+
       config.files.file.".github/workflows/ci.yaml".source =
         pkgs.runCommand "ci.yaml" { nativeBuildInputs = [ pkgs.yq-go ]; }
           ''

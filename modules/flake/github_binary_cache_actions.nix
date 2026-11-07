@@ -1,8 +1,17 @@
+{ flake-parts-lib, ... }:
 {
-  config.perSystem =
-    { pkgs, ... }:
+  options.perSystem = flake-parts-lib.mkPerSystemOption (
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
     let
+      cfg = config.githubBinaryCacheActions;
       yaml = pkgs.formats.yaml { };
+
+      actionPath = ".github/actions/nix-binary-cache";
 
       mkAction =
         name: action:
@@ -10,7 +19,7 @@
           generated = yaml.generate "action.yml" action;
         in
         {
-          ".github/actions/nix-binary-cache/${name}/action.yml".source =
+          "${actionPath}/${name}/action.yml".source =
             pkgs.runCommand "action.yml" { nativeBuildInputs = [ pkgs.yq-go ]; }
               ''
                 yq '
@@ -19,39 +28,36 @@
                 ' ${generated} > $out
               '';
         };
-
-      pathInput = {
-        description = "Directory holding the binary cache";
-        required = true;
-      };
     in
     {
-      config.files.file =
+      options.githubBinaryCacheActions = {
+        enable = lib.mkEnableOption "GitHub Actions that restore and save a file-based Nix binary cache";
+      };
+
+      config.files.file = lib.mkIf cfg.enable (
         mkAction "restore" {
           name = "Restore Nix binary cache";
-          description = "Restores a file-based Nix binary cache keyed on the nixpkgs pin in flake.lock";
-          inputs.path = pathInput;
-          outputs.key = {
-            description = "Key to save the updated binary cache under";
-            value = "\${{ steps.restore.outputs.cache-primary-key }}";
+          description = "Restores a file-based Nix binary cache from the most recent cache whose key starts with the given prefix";
+          inputs = {
+            path = {
+              description = "Directory holding the binary cache, which must match the file:// substituter in the Nix configuration";
+              default = "/tmp/nix-binary-cache";
+            };
+            key-prefix = {
+              description = "Prefix shared by the keys of caches to restore from";
+              required = true;
+            };
           };
           runs = {
             using = "composite";
             steps = [
               {
-                id = "nixpkgs";
-                name = "Read nixpkgs pin";
-                shell = "bash";
-                run = "echo \"rev=$(jq -r '.nodes[.nodes.root.inputs.nixpkgs].locked.rev' flake.lock)\" >> \"$GITHUB_OUTPUT\"";
-              }
-              {
-                id = "restore";
                 name = "Restore binary cache";
                 uses = "actions/cache/restore@v6";
                 "with" = {
                   path = "\${{ inputs.path }}";
-                  key = "nix-binary-cache-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-\${{ github.run_id }}";
-                  restore-keys = "nix-binary-cache-\${{ runner.os }}-\${{ steps.nixpkgs.outputs.rev }}-";
+                  key = "\${{ inputs.key-prefix }}";
+                  restore-keys = "\${{ inputs.key-prefix }}";
                 };
               }
             ];
@@ -59,16 +65,23 @@
         }
         // mkAction "save" {
           name = "Save Nix binary cache";
-          description = "Adds outputs built by nix-fast-build to a file-based Nix binary cache, leaving out paths cache.nixos.org already serves, and saves it";
+          description = "Adds store paths to a file-based Nix binary cache, leaving out paths the upstream caches already serve, and saves it";
           inputs = {
-            path = pathInput;
+            path = {
+              description = "Directory holding the binary cache, which must match the file:// substituter in the Nix configuration";
+              default = "/tmp/nix-binary-cache";
+            };
             key = {
-              description = "Key to save the binary cache under, as output by the restore action";
+              description = "Key to save the binary cache under";
               required = true;
             };
-            results-file = {
-              description = "nix-fast-build --stream-json-lines output";
+            store-paths = {
+              description = "Newline-separated store paths to add to the binary cache";
               required = true;
+            };
+            upstream-caches = {
+              description = "Space-separated URLs of binary caches whose paths are left out of the saved cache";
+              default = "https://cache.nixos.org";
             };
           };
           runs = {
@@ -80,12 +93,12 @@
                 shell = "bash";
                 env = {
                   CACHE_DIR = "\${{ inputs.path }}";
-                  RESULTS_FILE = "\${{ inputs.results-file }}";
+                  STORE_PATHS = "\${{ inputs.store-paths }}";
+                  UPSTREAM_CACHES = "\${{ inputs.upstream-caches }}";
                 };
                 run = ''
                   built_outputs="$RUNNER_TEMP/built_outputs.txt"
-                  jq -Rr 'fromjson? | select(.type == "BUILD" and .success) | .outputs[]' "$RESULTS_FILE" \
-                    | sort -u > "$built_outputs"
+                  printf '%s\n' "$STORE_PATHS" | sed '/^$/d' | sort -u > "$built_outputs"
                   echo "count=$(wc -l < "$built_outputs")" >> "$GITHUB_OUTPUT"
                   [ -s "$built_outputs" ] || exit 0
 
@@ -96,9 +109,9 @@
                   xargs nix copy --to "file://$CACHE_DIR?compression=none" < "$built_outputs"
 
                   cd "$CACHE_DIR" || exit 1
-                  # Drop paths that cache.nixos.org already serves, then the NARs no remaining narinfo uses.
+                  # Drop paths the upstream caches already serve, then the NARs no remaining narinfo uses.
                   find . -maxdepth 1 -name '*.narinfo' -printf '%f\n' | sed 's/\.narinfo$//' \
-                    | xargs -P 32 -I{} sh -c 'curl -fsI --retry 2 -o /dev/null https://cache.nixos.org/{}.narinfo && rm {}.narinfo || true'
+                    | xargs -P 32 -I{} sh -c 'for cache in $UPSTREAM_CACHES; do curl -fsI --retry 2 -o /dev/null "''${cache%/}/$1.narinfo" && rm "$1.narinfo" && break; done; true' _ {}
                   grep -h '^URL:' ./*.narinfo | sed 's/^URL: //' | sort -u > "$RUNNER_TEMP/kept_nars.txt"
                   find nar -type f | sort | comm -23 - "$RUNNER_TEMP/kept_nars.txt" | xargs --no-run-if-empty rm
                 '';
@@ -114,6 +127,8 @@
               }
             ];
           };
-        };
-    };
+        }
+      );
+    }
+  );
 }
