@@ -99,6 +99,7 @@ in
 - `nixos`
   - `default`
   - `meta`
+  - `opencode`
   - `tests`
 
 - `treefmt`
