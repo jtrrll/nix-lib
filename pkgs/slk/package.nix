@@ -10,13 +10,13 @@
 }:
 buildGoModule (finalAttrs: {
   pname = "slk";
-  version = "0.31.1";
+  version = "0.41.0";
 
   src = fetchFromGitHub {
     owner = "gammons";
     repo = "slk";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-37eb+XtNFxzAZqRfzwGLDZHZg8uNuyLm2q0HXQJy+is=";
+    hash = "sha256-usuYcsE5Utlh2xKwoOvn5JsOEC53BKD8zWO1WHJkB/4=";
   };
 
   vendorHash = "sha256-VPmvgB8BkjI3DOdl4XMqT0nxXKdz/v0Hs06veKtfvoY=";
