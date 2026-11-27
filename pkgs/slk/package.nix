@@ -10,16 +10,16 @@
 }:
 buildGoModule (finalAttrs: {
   pname = "slk";
-  version = "0.41.0";
+  version = "0.52.0";
 
   src = fetchFromGitHub {
     owner = "gammons";
     repo = "slk";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-usuYcsE5Utlh2xKwoOvn5JsOEC53BKD8zWO1WHJkB/4=";
+    hash = "sha256-WacGHw9j4SWVY3ureLL3a3+JI6x7Prk75qT/CZ9oXiw=";
   };
 
-  vendorHash = "sha256-VPmvgB8BkjI3DOdl4XMqT0nxXKdz/v0Hs06veKtfvoY=";
+  vendorHash = "sha256-eQyRkYRRel3uezV44K22l77oBXILRHklUV4quLx5b4Q=";
 
   subPackages = [ "cmd/slk" ];
 
