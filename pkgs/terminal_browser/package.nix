@@ -49,7 +49,7 @@ let
     };
     x86_64-linux = {
       target = "linux-x64";
-      hash = "sha256-KOc07omlANb/Cx/a9VgiNooW4mjLkhVbuwJ5tGTVUHY=";
+      hash = "sha256-tmGZ9H7BiwCkdCPMgJXcBomOrtDE8keiUs/OdjiOoVE=";
     };
   };
   inherit (stdenvNoCC.hostPlatform) system;
@@ -57,7 +57,7 @@ let
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "terminal-browser";
-  version = "0.15.7";
+  version = "0.16.3";
 
   src = fetchurl {
     url = "https://github.com/zenbu-labs/terminal-browser/releases/download/v${finalAttrs.version}/terminal-browser-${source.target}.tar.gz";
